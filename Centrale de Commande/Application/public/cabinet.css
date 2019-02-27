@@ -1,0 +1,182 @@
+/*style du Header */
+.header{
+	background: url("imagebandeau.jpeg");
+	background-repeat: no-repeat;
+	background-size: 100%;
+	height: 300px;
+}
+
+h1{
+	display : block;
+	color: white;
+	text-align: left;
+	letter-spacing: 4px;
+	font-family: 'Zapfino', sans-serif;
+}
+
+
+/*style de la navigation*/
+
+nav {
+    display: block;
+}
+
+
+.bar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #F8F0CD;
+}
+
+.liste {
+    float: left;
+    display: inline;
+}
+
+.liste a{
+    display: block;
+    color: black;
+    font-family: 'Baskerville', sans-serif;
+	letter-spacing: 5px;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.liste a:hover {
+    background-color: #D69C21;
+}
+
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%
+}
+
+
+/*style de l'introduction */
+.introduction{
+	height: auto;
+	width: 100%;
+	background-color: white;
+}
+
+.introductionTexte{
+	display: inline-block;
+	font-family : 'Didot', sans-serif ;
+	font-style: italic;
+	color: #CB9951;
+	width: 48%;
+	background-color: white;
+	text-align: center;
+	height: auto;
+	margin-top: 1%;
+	font-size: 110%;
+	margin :1%;
+	vertical-align: middle;
+}
+
+.imageIntro{
+	display: inline-block;
+	width: 48%;
+	height: auto;
+	margin-top: 1%;
+	margin:1%;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	vertical-align: middle;
+}
+
+
+.titre{
+	color: black;
+	font-style:normal;
+	letter-spacing: 2px;
+	font-family: 'Didot', serif;
+	text-align: center;
+}
+
+
+
+/*styles généraux des titres, corps, paragraphes, images et légendes*/
+
+h2{
+	display : block;
+	color: black;
+	font-style:normal;
+	letter-spacing: 2px;
+	font-family: 'Didot', serif;
+	text-align: center;
+	vertical-align: center;
+	height: 50px; 
+	background-color: #F8F0CD;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	height: 2em;
+  	line-height: 2em;
+ 	white-space: nowrap;
+
+} 
+
+h3{
+	display : block;
+	color: #CB9951;
+	font-style:italic;
+	letter-spacing: 2px;
+	font-family: 'Didot', sans-serif;
+	text-align: center;
+}
+
+h4 a{
+	display : block;
+	color: #CB9951;
+	font-style: normal;
+	letter-spacing: 2px;
+	font-family: 'Baskerville', sans-serif;
+	text-align: center;
+}
+
+h4{
+	display : block;
+	color: black;
+	font-style: normal;
+	letter-spacing: 2px;
+	font-family: 'Baskerville', sans-serif;
+	text-align: left;
+}
+
+body{
+	font-family : 'Josephin',sans-serif;
+	text-align: justify;
+}
+
+p{
+	text-indent: 2em;
+}
+
+img {
+	max-width: 100%;
+	height:auto;
+}
+
+legend{
+	margin: auto;
+    width: 50%;
+	text-align: center;
+	font-style: italic;    
+	color: black;
+    font-family: 'Baskerville', sans-serif;
+	letter-spacing: 5px;
+}
+
+
+/*style du pied de page*/
+
+footer {
+	margin-top: 20px;
+    background-color: #F8F0CD;
+    padding: 10px;
+    text-align: center;
+	font-family : 'Didot' , sans-serif;
+	font-style: italic;
+}
