@@ -127,9 +127,9 @@ void test(){
 void main (void) 
 {
 
-	 XBR2 |= 0x40; // Enable crossbar
-	 XBR0 |= 0x04; // Enable UART0
-	 XBR1 |=0x80;  // Enable SYSCLK
+	 XBR2 |= 0x44; // Enable crossbar
+	 XBR0 |= 0x06; // Enable UART0 et SPI??
+	 XBR1 |= 0x80;  // Enable SYSCLK
 	
    WDTCN = 0xDE;   // Dévalidation du watchdog 
    WDTCN = 0xAD;
@@ -143,7 +143,7 @@ void main (void)
 	 OSCXCN = 0xE7;		//	COnfiguration Clock pour le baud-rate
 	 OSCICN |= 0x08; 	//	Enable external clock
 	 
-	 TCON |= 0xC0; 	//	Config Timer 2 pour le Baud-rate UART0 
+	 TCON |= 0xC0; 	//	Config Timer 1 pour le Baud-rate UART0 et UART1
 	 TMOD |= 0x10;
 	 TL1 = 0xDC; TH1 = 0xDD;
 	 
