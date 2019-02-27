@@ -1,17 +1,22 @@
 //------------------------------------------------------------------------------------
-// Projet_Transversal - Communication.h
+// Projet_BSE.h
 //------------------------------------------------------------------------------------
-// DATE: 27/02/19
+// DATE: 19/12/18
 //
 // Target: C8051F02x
 // Tool chain: KEIL Microvision 4
 //
-// DEVELOPPEURS: BLASCO Yohann, BRU Natacha, RENOTTON Guillaume
+//  NOMS: Albert, Avinain, Bru, Jannin
 //
-// Groupe: B2
+// Numéro du sujet: 1
+// Binôme : A
 //
 //------------------------------------------------------------------------------------
 
-void init (void);
-void UART_receive (void);
-void Welcome();
+void cfg_LED();
+void cfg_timer3();
+void cfg_timer4();
+void cfg_servo();
+void servo_pos(int);
+void start_blink_led();
+void stop_blink_led();

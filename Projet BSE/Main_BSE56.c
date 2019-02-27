@@ -1,19 +1,20 @@
 //------------------------------------------------------------------------------------
-// Projet_Transversal
+// Projet_BSE.c
 //------------------------------------------------------------------------------------
-// DATE: 27/02/19
+// DATE: 19/12/18
 //
 // Target: C8051F02x
 // Tool chain: KEIL Microvision 4
 //
-// DEVELOPPEURS: BLASCO Yohann, BRU Natacha, RENOTTON Guillaume
+//  NOMS: Albert, Avinain, Bru, Jannin
 //
-// Groupe: B2
+// Numéro du sujet: 1
+// Binôme : B (Avinain, Bru)
 //
 //------------------------------------------------------------------------------------
 #include "c8051F020.h"
-#include "Communication.h"
-
+#include "Binome_A.h"
+#include "Binome_B.h"
 
 //------------------------------------------------------------------------------------
 // MAIN Routine

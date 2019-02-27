@@ -3,25 +3,28 @@
 //------------------------------------------------------------------------------------
 // DATE: 27/02/19
 //
-// Target: C8051F02x
-// Tool chain: KEIL Microvision 4
-//
-//  NOMS: Blasco, Bru, Renotton
+// DEVELOPPEUR: BRU Natacha
 //
 // Groupe: B2
 //
 //------------------------------------------------------------------------------------
+// DÉCLARATION DES VARIABLES
+//------------------------------------------------------------------------------------
+
 var express = require ('express');
 var app = express();
 var http = require('http');
 var server = http.Server(app);
 
+
+//------------------------------------------------------------------------------------
+// GESTION DU PORT SERIE
 //------------------------------------------------------------------------------------
 
 // Port série https://serialport.io
 const SerialPort = require('serialport')
 const Readline = require('@serialport/parser-readline')
-const port = new SerialPort('/dev/tty-usbserial1', { baudRate: 256000 })
+const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 256000 })
 
 const parser = new Readline()
 port.pipe(parser)
@@ -47,6 +50,9 @@ port.on('data', function (data) {
   console.log('Data:', data)
 })
 
+
+//------------------------------------------------------------------------------------
+// GESTION DE LA PAGE IHM
 //------------------------------------------------------------------------------------
 
 app.use(express.static(__dirname + '/public'));
