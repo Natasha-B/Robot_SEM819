@@ -96,7 +96,7 @@ void test(){
 			envoie = strcat(strcat(strcat(strcat("mogo 1:-",vitesse)," 2:-"),vitesse),"\r");
 			}
 		}
-	if(reception[0]=='S'){																	// STOP
+	if(reception[0]=='S'){															// STOP
 		envoie = "stop\r";
 		}
 	}
@@ -106,9 +106,10 @@ void test(){
 	if(reception[1]=='G')&(reception[0]='R'){						// Rotation Gauche 90°
 		envoie = "digo 1:1755:-20 2:1755:20\r"
 		}	
-/*	if(SBUF0=='C')&(last_letter='R'){						// Rotation Complete 180°
+	if(reception[1]=='C')&(reception[0]='R'){										// Rotation Complete 180°
+		envoie = "digo 1:3510:-20 2:3510:20\r"
 		}	
-	if(SBUF0=='A')&(last_letter='R'){						// Rotation angle donné
+/*	if(SBUF0=='A')&(last_letter='R'){						// Rotation angle donné
 		}	
 	if(SBUF0=='G'){						// Deplacement jusqu'a une coordonnee
 		}
@@ -144,14 +145,15 @@ void main (void)
 	 OSCICN |= 0x08; 	//	Enable external clock
 	 
 	 TCON |= 0xC0; 	//	Config Timer 1 pour le Baud-rate UART0 et UART1
-	 TMOD |= 0x10;
-	 TL1 = 0xDC; TH1 = 0xDD;
+	 TMOD |= 0x20;
+	 TMOD &= 0x2F;
+	 TH1 = 0xDD;
 	 
 	 SCON0 |= 0x70; 	//	Config UART0
 	 SCON1 |= 0x70; 	//	Config UART1
 	 
 	 ESO = 1; 				//	Flag UART0 activé
-	 ES1 = 1; 				//	Flag UART0 activé
+	 ES1 = 1; 				//	Flag UART1 activé
 	 
 	 PCON  &= 0x6F;		// 	on active le Baud-rate UART0 UART1 en divided by two
 	 
