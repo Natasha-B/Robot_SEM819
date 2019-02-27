@@ -220,10 +220,6 @@ void UART_receive (void) {
 		return;
 	
 	switch (UART_buff) {
-		// Mode automatique
-		case 'a':
-			auto_mode();
-			break;
 		
 		case '0' : 
 			run(0);
@@ -243,16 +239,6 @@ void UART_receive (void) {
 		
 		case 'g' :
 			run(45);
-			break;
-		
-		// Lecture de la distance MIN
-		case 'L':
-			UART_sendi("Distance min: ", get_CSG_min(), "cm");
-			break;
-		
-		// Lecture de la distance MAX
-		case 'H':
-			UART_sendi("Distance max: ", get_CSG_max(), "cm");
 			break;
 		
 		default:
@@ -305,4 +291,18 @@ void Welcome() {
 	UART_sendCRLF();
 }
 
+/**
+ * Envoi de la consigne de rotation à la carte master
+ * @param int angle, angle de rotation (en degrès)
+ * @return void
+ */
+void run (int angle) {
+
+	AMX0SL = 0x0; // AIN0
+	AD0INT = 0;
+	AD0BUSY = 1;
+	while(AD0INT != 1);
+	UART_sends(itos(angle));
+	
+}
 
