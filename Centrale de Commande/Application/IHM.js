@@ -71,4 +71,4 @@ app.get('/assistance/:nom', function(req,res){
 
 //------------------------------------------------------------------------------------
 
-server.listen(8080);
+server.listen(8080);  //http://localhost:8080
