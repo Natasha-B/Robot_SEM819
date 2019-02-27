@@ -20,15 +20,15 @@ var server = http.Server(app);
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', function(req,res){
-	res.render('index.ejs', {});
+	res.render('couverture.ejs', {});
 });
 
-app.get('/banana', function(req,res){
-	res.render('banana.ejs', {"nom": "en pyjama"});
+app.get('/assistance', function(req,res){
+	res.render('assistance.ejs', {"nom": "en pyjama"});
 });
 
-app.get('/banana/:nom', function(req,res){
-	res.render('banana.ejs', {"nom": req.params.nom});
+app.get('/assistance/:nom', function(req,res){
+	res.render('assistance.ejs', {"nom": req.params.nom});
 });
 
 server.listen(8080);
