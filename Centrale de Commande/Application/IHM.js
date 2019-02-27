@@ -1,3 +1,16 @@
+//------------------------ -----------------------------------------------------------
+// Projet_Transversal - IHM.js
+//------------------------------------------------------------------------------------
+// DATE: 27/02/19
+//
+// Target: C8051F02x
+// Tool chain: KEIL Microvision 4
+//
+//  NOMS: Blasco, Bru, Renotton
+//
+// Groupe: B2
+//
+//------------------------------------------------------------------------------------
 
 var express = require ('express');
 var app = express();
@@ -19,12 +32,3 @@ app.get('/banana/:nom', function(req,res){
 });
 
 server.listen(8080);
-
-// var fs = require('fs');
-// http.createServer(function (req, res) {
-//   fs.readFile('bonjour.html', function(err, data) {
-//     res.writeHead(200, {'Content-Type': 'text/html'});
-//     res.write(data);
-//     res.end();
-//   });
-// }).listen(8080);
