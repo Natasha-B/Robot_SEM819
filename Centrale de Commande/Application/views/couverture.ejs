@@ -8,29 +8,52 @@
 </head>
 
 <body onscroll = "MenuFixe()">
+
 	<div class="header">
-		<h1>IHM pour le Robot SEM819</h1>
+		<h1>IHM - Robot SEM819</h1>
 	</div>
+
 	<nav id= "menu">
 		<ul class="bar">
       		<li class="liste"><a href="#controles">Contrôles robot</a></li>
       		<li class="liste"><a href="#cartographie" >Cartographie</a></li>
+      		<li class="liste"><a href="#indicateurs" >Indicateurs</a></li>
      		<li class="liste"><a href="/assistance" >Assistance</a></li>
   		</ul>
 	</nav>
+
 	<div class = "controles" id = "controles">
 		<h2>Actions du robot SEM819</h2>
-		<button class="button" type="button">Arrêt d'urgence</button>
-		<p> Déplacements du robot </p>
-		<button class="button" type="button">Avancer</button>
-		<button class="button" type="button">Reculer</button>
-		<button class="button" type="button">Rotation droite</button>
-		<button class="button" type="button">Rotation gauche</button>
-		<button class="button" type="button">Stop</button>
-		<p> Activation des capteurs </p>
-		<button class="button" type="button">Mesure de distance</button>
-
+		<button class="buttonStop" type="button">ARRET D'URGENCE</button>
+		<div class = "deplacements" id = "deplacements">
+			<h3> Déplacements du robot </h3>
+			<button class="button" type="button">Avancer</button><!--
+		--><button class="button" type="button">Reculer</button>
+			<button class="button" type="button">Rotation droite</button><!--
+		--><button class="button" type="button">Rotation gauche</button><!--
+		--><button class="button" type="button">Stop</button>
+		</div>
+		<div class = "mesure" id = "mesure">
+			<h3> Activation des capteurs de mesure </h3>
+			<button class="button" type="button">Mesure de distance</button>
+			<button class="button" type="button">Mesure de consommation</button>
+		</div><!--
+	--><div class = "son" id = "son">
+			<h3> Gestion du son </h3>
+			<button class="button" type="button">Emission de son</button>
+			<button class="button" type="button">Acquisition de son</button>
+		</div><!--
+	--><div class = "images" id = "images">
+			<h3> Gestion images </h3>
+			<button class="button" type="button">Prise de vue</button>
+		</div><!--
+	--><div class = "pointeur" id = "pointeur">
+			<h3> Pointeur lumineux </h3>
+			<button class="button" type="button">Activer le pointeur lumineux</button>
+		</div>
 	</div>
+
+
 	<div class="cartographie" id="cartographie">
 		<h2>Cartographie</h2>
 		<p>Obstacles</p>
@@ -41,6 +64,12 @@
 			</fieldset>
 		</div>
 	</div>
+
+	<div class="indicateurs" id="indicateurs">
+		<h2>Indicateurs</h2>
+		<p> Consomation </p>
+	</div>
+
 </body>
 
 

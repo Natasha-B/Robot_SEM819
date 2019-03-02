@@ -22,33 +22,33 @@ var server = http.Server(app);
 //------------------------------------------------------------------------------------
 
 // Port série https://serialport.io
-const SerialPort = require('serialport')
-const Readline = require('@serialport/parser-readline')
-const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 256000 })
+const SerialPort = require('serialport');
+const Readline = require('@serialport/parser-readline');
+const port = new SerialPort('/dev/tty.usbmodem14101', { baudRate: 9600 });
 
-const parser = new Readline()
-port.pipe(parser)
-
-parser.on('data', line => console.log(`> ${line}`))
+const parser = new Readline();
+port.pipe(parser);
 
 // Envoi du message de début
-port.write('ROBOT POWER ON\n', function(err) {
+port.write('message a envoyer\n', function(err) {
   if (err) {
-    return console.log('Error on write: ', err.message)
+    return console.log('Error on write: ', err.message);
   }
-  console.log('message written')
-})
+  console.log('message envoyé');
+});
 
 // Gestion des erreurs
 port.on('error', function(err) {
-  console.log('Error: ', err.message)
-})
+  console.log('Error: ', err.message);
+});
 
 
 // Switches the port into "flowing mode"
 port.on('data', function (data) {
-  console.log('Data:', data)
+  console.log('J\'ai reçu:', data);
 })
+
+//parser.on('data', line => console.log(`> ${line}`))
 
 
 //------------------------------------------------------------------------------------
