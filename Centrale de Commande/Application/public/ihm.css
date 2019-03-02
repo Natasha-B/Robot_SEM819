@@ -35,7 +35,7 @@ nav {
   display: inline-block;
   position: relative;
   margin: auto;
-  margin:3%;
+  margin:2% 2% 2% 6%;
   border: none;
   color: white;
   padding: 15px 25px;
@@ -249,13 +249,16 @@ p{
 }
 
 img {
+	display: inline-block;
 	max-width: 100%;
 	height:auto;
+	margin: 1% 1% 1% 15%;
 }
 
 legend{
+	display: inline-block;
 	margin: auto;
-    width: 50%;
+    width: auto;
 	text-align: center;
 	font-style: italic;    
 	color: black;
@@ -268,7 +271,7 @@ legend{
 
 footer {
 	margin-top: 20px;
-    background-color: #F8F0CD;
+    background-color: #4FB0A3;
     padding: 10px;
     text-align: center;
 	font-family : 'Didot' , sans-serif;
