@@ -1,9 +1,12 @@
 <!DOCTYPE HTML>
 <html lang="fr">
+
 <head>
 	<meta charset="UTF-8" />
 	<link rel="stylesheet" href="/ihm.css" media = "screen">
 	<script type='text/javascript' src='/cabinet.js'></script>
+	 <script src="/socket.io/socket.io.js"></script>
+	 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 	<title>Interface Homme-Machine</title>
 </head>
 
@@ -13,6 +16,7 @@
 		<h1>IHM - Robot SEM819</h1>
 	</div>
 
+<!-- Bare de menu -->
 	<nav id= "menu">
 		<ul class="bar">
       		<li class="liste"><a href="#controles">Contrôles robot</a></li>
@@ -22,38 +26,105 @@
   		</ul>
 	</nav>
 
+
+<!-- Section contrôles du robot -->
 	<div class = "controles" id = "controles">
 		<h2>Actions du robot SEM819</h2>
-		<button class="buttonStop" type="button">ARRET D'URGENCE</button>
+		<button class="buttonStop" type="button" value="commande" id="arret" />ARRET D'URGENCE</button>
 		<div class = "deplacements" id = "deplacements">
 			<h3> Déplacements du robot </h3>
-			<button class="button" type="button">Avancer</button><!--
-		--><button class="button" type="button">Reculer</button>
-			<button class="button" type="button">Rotation droite</button><!--
-		--><button class="button" type="button">Rotation gauche</button><!--
-		--><button class="button" type="button">Stop</button>
+			<button class="button" type="button" value="commande" id="debut" />Debut</button><!--
+		--><button class="button" type="button" value="commande" id="avance" />Avancer</button><!--
+		--><button class="button" type="button" value="commande" id="recule" />Reculer</button>
+			<button class="button" type="button" value="commande" id="tourne_d" />Rotation droite</button><!--
+		--><button class="button" type="button" value="commande" id="tourne_g" />Rotation gauche</button><!--
+		--><button class="button" type="button" value="commande" id="demiTour" />Demi tour</button><!--
+		--><button class="button" type="button" value="commande" id="stop" />Stop</button>
 		</div>
 		<div class = "mesure" id = "mesure">
 			<h3> Activation des capteurs de mesure </h3>
-			<button class="button" type="button">Mesure de distance</button>
-			<button class="button" type="button">Mesure de consommation</button>
+			<button class="button" type="button" value="commande" id="mesure_d" />Mesure de distance</button>
+			<button class="button" type="button" value="commande" id="mesure_c" />Mesure de consommation</button>
 		</div><!--
 	--><div class = "son" id = "son">
 			<h3> Gestion du son </h3>
-			<button class="button" type="button">Emission de son</button>
-			<button class="button" type="button">Acquisition de son</button>
+			<button class="button" type="button" value="commande" id="emission" />Emission de son</button>
+			<button class="button" type="button" value="commande" id="reception" />Acquisition de son</button>
 		</div><!--
 	--><div class = "images" id = "images">
 			<h3> Gestion images </h3>
-			<button class="button" type="button">Prise de vue</button>
+			<button class="button" type="button" value="commande" id="image" />Prise de vue</button>
 		</div><!--
 	--><div class = "pointeur" id = "pointeur">
 			<h3> Pointeur lumineux </h3>
-			<button class="button" type="button">Activer le pointeur lumineux</button>
+			<button class="button" type="button" value="commande" id="active_p"/>Activer</button>
+			<button class="button" type="button" value="commande" id="intensité_plus"/>Intensité + </button>
+			<button class="button" type="button" value="commande" id="intensité_moins"/>Intensité - </button>
 		</div>
 	</div>
 
+<!-- Section évènements boutons -->
 
+    <script>
+        var sockets = io.connect('http://localhost:8080');
+        sockets.on('message', function(message) {
+            alert(message);
+        });
+
+        $('#arret').click(function () {
+            sockets.emit('message', 'Q');
+        });
+        $('#debut').click(function () {
+            sockets.emit('message', 'D1');
+        });
+		$('#avance').click(function () {
+            sockets.emit('message', 'TV vitesse 20 A 20');
+        });
+		$('#recule').click(function () {
+            sockets.emit('message', 'TV vitesse 20 B 20');
+        });
+        $('#tourne_d').click(function () {
+            sockets.emit('message', 'TV vitesse 20 RD');
+        });
+        $('#tourne_g').click(function () {
+            sockets.emit('message', 'TV vitesse 20 RG');
+        });
+        $('#demiTour').click(function () {
+            sockets.emit('message', 'TV vitesse 20 RC');
+        });
+        $('#stop').click(function () {
+            sockets.emit('message', 'E');
+        });
+        $('#mesure_d').click(function () {
+            sockets.emit('message', 'Mesure la distance');
+        });
+        $('#mesure_c').click(function () {
+            sockets.emit('message', 'Mesure la consommation');
+        });
+        $('#emission').click(function () {
+            sockets.emit('message', 'Emet un son');
+        });
+        $('#reception').click(function () {
+            sockets.emit('message', 'Ecoute le son');
+        });
+        $('#image').click(function () {
+            sockets.emit('message', 'Prends une photo');
+        });
+        $('#active_p').click(function () {
+            sockets.emit('message', 'Active le pointeur lumineux');
+        });
+        $('#intensité_plus').click(function () {
+            sockets.emit('message', "Augmente l'intensité");
+        });
+        $('#intensité_moins').click(function () {
+            sockets.emit('message', "Diminue l'intensité");
+        });
+
+    </script>
+
+
+
+<!-- Section cartographie -->
 	<div class="cartographie" id="cartographie">
 		<h2>Cartographie</h2>
 		<p>Obstacles</p>
@@ -65,6 +136,8 @@
 		</div>
 	</div>
 
+
+<!-- Section indicateurs -->
 	<div class="indicateurs" id="indicateurs">
 		<h2>Indicateurs</h2>
 		<p> Consomation </p>

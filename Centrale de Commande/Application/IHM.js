@@ -16,6 +16,9 @@ var app = express();
 var http = require('http');
 var server = http.Server(app);
 
+// Chargement de socket.io
+var io = require('socket.io').listen(server);
+
 
 //------------------------------------------------------------------------------------
 // GESTION DU PORT SERIE   https://serialport.io
@@ -29,11 +32,11 @@ const port = new SerialPort('/dev/tty.usbmodem14101', { baudRate: 9600 });
 const parser = port.pipe(new Readline());
 
 // Envoi du message de début
-port.write('message a envoyer\n', function(err) {
+port.write('Robot Connecté\n', function(err) {
   if (err) {
     return console.log('Error on write: ', err.message);
   }
-  console.log('message envoyé');
+  console.log('Initialisation');
 });
 
 // Gestion des erreurs
@@ -42,22 +45,31 @@ parser.on('error', function(err) {
 });
 
 
-// Reception d'informations
+// Reception du message d'init
 parser.on('data', function (data) {
-  console.log('J\'ai reçu:', data);
-})
+  console.log('Message: ', data);
+  io.to("all").emit('message', data);
+});
 
 //------------------------------------------------------------------------------------
 // GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
 //------------------------------------------------------------------------------------
 
 
-// Chargement de socket.io
-var io = require('socket.io').listen(server);
-
-// Quand un client se connecte, on le note dans la console
 io.sockets.on('connection', function (socket) {
-    console.log('Un client est connecté !');
+    socket.emit('message', "Vous êtes bien connecté à l'IHM!");
+    socket.join("all");
+
+    // Quand le serveur reçoit un signal de type "message" du client    
+    socket.on('message', function (message) {
+        console.log("Message de l'IHM :  "+ message);
+        port.write( message, function(err) {
+	    if (err) {
+	    	return console.log('Error on write: ', err.message);
+	  	}
+	  	console.log('message envoyé au robot');
+	  	});
+    });
 });
 
 
