@@ -72,13 +72,13 @@
         });
 
         $('#arret').click(function () {
-            sockets.emit('message', 'Q');
+            sockets.emit('message', 'stop');
         });
         $('#debut').click(function () {
             sockets.emit('message', 'D1');
         });
 		$('#avance').click(function () {
-            sockets.emit('message', 'TV vitesse 20 A 20');
+            sockets.emit('message', 'mogo 1:20 2:20');
         });
 		$('#recule').click(function () {
             sockets.emit('message', 'TV vitesse 20 B 20');
