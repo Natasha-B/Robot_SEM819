@@ -18,16 +18,15 @@ var server = http.Server(app);
 
 
 //------------------------------------------------------------------------------------
-// GESTION DU PORT SERIE
+// GESTION DU PORT SERIE   https://serialport.io
 //------------------------------------------------------------------------------------
 
-// Port série https://serialport.io
+// Port série 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 const port = new SerialPort('/dev/tty.usbmodem14101', { baudRate: 9600 });
 
-const parser = new Readline();
-port.pipe(parser);
+const parser = port.pipe(new Readline());
 
 // Envoi du message de début
 port.write('message a envoyer\n', function(err) {
@@ -38,17 +37,28 @@ port.write('message a envoyer\n', function(err) {
 });
 
 // Gestion des erreurs
-port.on('error', function(err) {
+parser.on('error', function(err) {
   console.log('Error: ', err.message);
 });
 
 
-// Switches the port into "flowing mode"
-port.on('data', function (data) {
+// Reception d'informations
+parser.on('data', function (data) {
   console.log('J\'ai reçu:', data);
 })
 
-//parser.on('data', line => console.log(`> ${line}`))
+//------------------------------------------------------------------------------------
+// GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
+//------------------------------------------------------------------------------------
+
+
+// Chargement de socket.io
+var io = require('socket.io').listen(server);
+
+// Quand un client se connecte, on le note dans la console
+io.sockets.on('connection', function (socket) {
+    console.log('Un client est connecté !');
+});
 
 
 //------------------------------------------------------------------------------------
@@ -71,4 +81,4 @@ app.get('/assistance/:nom', function(req,res){
 
 //------------------------------------------------------------------------------------
 
-server.listen(8080);  //http://localhost:8080
+server.listen(8080);  //  http://localhost:8080
