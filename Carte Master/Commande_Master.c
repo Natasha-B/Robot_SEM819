@@ -21,8 +21,43 @@ char reception = '';
 char envoie = '';
 char TVvitesse = "20";
 char vitesse = '';
-int i =0;
+int i = 0;
+char AngleRotation = '90';
+int Longueur;
+int r = 11.2;
+char distance;
 
+
+/**
+ * Conversion int to string
+ * @param int v , valeur à convertir
+ * @return string str2, chaine de caractères associée
+ */
+char *itos(unsigned int v) {
+	char str1[20] = "", str2[20] = "";
+	int unite = 0;
+	int indice = 0, indice2 = 0;
+	while(v != 0){
+		unite = v%10; // Unité
+		str1[indice] = 0x30 + unite;
+		indice++;
+		v = (v - unite)/10;
+	}
+	
+	if(indice == 0) {
+		indice = 1;
+		str1[0] = '0';
+	}
+	
+	// Reverse de string
+	for(;indice > 0;indice--) {
+		str2[indice-1] = str1[indice2];
+		indice2++;
+	}
+	str2[indice2+1] = '\0';
+	
+	return str2;
+}
 /*
 			Interruptions RECEPTION UART0 : Fonction d'interruption
 	*/
@@ -96,22 +131,58 @@ void test(){
 			envoie = strcat(strcat(strcat(strcat("mogo 1:-",vitesse)," 2:-"),vitesse),"\r");
 			}
 		}
-	if(reception[0]=='S'){															// STOP
+	if(reception[0]=='S'){																	// STOP
 		envoie = "stop\r";
 		}
 	}
-	if(reception[1]=='D')&(reception[0]='R'){						// Rotation Droite 90°
-		envoie = "digo 1:1755:20 2:1755:-20\r";
+	if(reception[1]=='D')&(reception[0]='R'){								// Rotation Droite 90°
+		envoie = "digo 1:346:20 2:346:-20\r";
 		}
-	if(reception[1]=='G')&(reception[0]='R'){						// Rotation Gauche 90°
-		envoie = "digo 1:1755:-20 2:1755:20\r"
+	if(reception[1]=='G')&(reception[0]='R'){								// Rotation Gauche 90°
+		envoie = "digo 1:346:-20 2:346:20\r"
 		}	
-	if(reception[1]=='C')&(reception[0]='R'){										// Rotation Complete 180°
-		envoie = "digo 1:3510:-20 2:3510:20\r"
+	if(reception[1]=='C')&(reception[0]='R'){								// Rotation Complete 180°
+		if (reception[3]=='D'){
+			envoie = "digo 1:692:-20 2:692:20\r"
+			}
+		else{
+			envoie = "digo 1:692:20 2:692:-20\r"
+			}
 		}	
-/*	if(SBUF0=='A')&(last_letter='R'){						// Rotation angle donné
+	if(reception[1]=='A')&(reception[0]='R'){						// Rotation angle donné
+		if (reception[3]=='D'){
+			if (length(reception)>5){
+				AngleRotation='';
+				for (i=5;i<length(reception);i++){
+					AngleRotation=strcat(AngleRotation,reception[i]);			// angle en degres
+					}
+				L = 3.14*r*atoi(AngleRotation)/180;						// Longueur en cm
+				L = L/5.24;																		// Longueur en inch
+				L = L/0.020;																	// Longueur en ticks
+				distance = itos(L);
+				envoie = strcat(strcat(strcat(strcat("digo 1:",distance),":20 2:"),distance),":-20\r");
+				}
+			else{
+				envoie = "digo 1:346:20 2:346:-20\r";
+				}
+		else{
+				if (length(reception)>5){
+				AngleRotation='';
+				for (i=5;i<length(reception);i++){
+					AngleRotation=strcat(AngleRotation,reception[i]);			// angle en degres
+					}
+				L = 3.14*r*atoi(AngleRotation)/180;						// Longueur en cm
+				L = L/5.24;																		// Longueur en inch
+				L = L/0.020;																	// Longueur en ticks
+				distance = itos(L);
+				envoie = strcat(strcat(strcat(strcat("digo 1:",distance),":-20 2:"),distance),":20\r");
+				}
+			else{
+				envoie = "digo 1:346:-20 2:346:20\r";
+				}
+			}
 		}	
-	if(SBUF0=='G'){						// Deplacement jusqu'a une coordonnee
+/*	if(SBUF0=='G'){						// Deplacement jusqu'a une coordonnee
 		}
 	if(SBUF0=='S')&(last_letter='A'){						// Acquisition signaux sonores
 		}	
@@ -144,13 +215,12 @@ void main (void)
 	 OSCXCN = 0xE7;		//	COnfiguration Clock pour le baud-rate
 	 OSCICN |= 0x08; 	//	Enable external clock
 	 
-	 TCON |= 0xC0; 	//	Config Timer 1 pour le Baud-rate UART0 et UART1
+	 TCON |= 0x40; 	//	Config Timer 1 pour le Baud-rate UART0 et UART1
 	 TMOD |= 0x20;
-	 TMOD &= 0x2F;
 	 TH1 = 0xDD;
 	 
-	 SCON0 |= 0x70; 	//	Config UART0
-	 SCON1 |= 0x70; 	//	Config UART1
+	 SCON0 |= 0x50; 	//	Config UART0
+	 SCON1 |= 0x50; 	//	Config UART1
 	 
 	 ESO = 1; 				//	Flag UART0 activé
 	 ES1 = 1; 				//	Flag UART1 activé
