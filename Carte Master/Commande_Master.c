@@ -26,6 +26,7 @@ char AngleRotation = '90';
 int Longueur;
 int r = 11.2;
 char distance;
+char TableauCaract[200][30];
 
 
 /**
