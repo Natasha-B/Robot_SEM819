@@ -2,7 +2,7 @@
 
 Ce projet s'inscrit dans le programme du second semestre de la filière 4ETI à CPE Lyon. 
 
-Ce dossier rassemble les travaux du groupe B2 sur le robot SEM_819. Nous avons découpé le système en plusieurs entités :
+Ce dossier rassemble les travaux du groupe B2 sur le robot SEM_819. Nous avons découpé le système en plusieurs entités:
 * Centrale de Commande
 * Carte Master
 * Carte Slave
