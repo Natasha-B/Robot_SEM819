@@ -12,19 +12,25 @@
 //
 //------------------------------------------------------------------------------------
 #include <c8051F020.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 sfr16 TH4_TL4 = 0xF4;  // Timer 4: T4L 0xF4  T4H 0xF5 
  
 unsigned int cp; 
 long sysclk = 22118400;  // Fréquence de l'horloge externe 
- 
+int epreuve = 0; 	//Booleen indiquant si l'epreuve est en cours ou non
+char reception[100];
+char message[100]; 
+int encours = 0; 	//Booleen indiquant si une transmission est en cours ou non
  
  // Servomoteur HS-422: +
 sbit Cde_Servo = P1^0; 
 float t_pos_min = 0.5;  // Durée de l'impulsion en ms pour -90° 
 float t_pos_max = 2.4;  // Durée de l'impulsion en ms pour 90° 
 float alpha;  // Durée d'impulsion par dégré d'angle 
-int pos = 0;
+int pos = 1;
  
  void delay(int j){ 
  	unsigned int n, cp; 
@@ -87,7 +93,31 @@ void cfg_crossbar(){
 	XBR2 = 0x40; 
 }
  
- 
+//Va permettre la reception et la transmission de donnees
+void configUART0(){
+	PCON |= 0x80;	//Activation du bade rate doubler
+	SM00 = 0;	//Selection du mode 1 de l'UART0
+	SM10 = 1;
+	SM20 = 1;	//Bit de stop à 1;
+	REN0 = 1; 	//Autorisation des receptions
+	TI0 = 0;	//Clear le flag de transmission
+	RI0 = 0; 	//Clear le flag de reception
+	ES0 = 1; 	//Autorisation de l'interrutpion de reception et transmission
+	T2CON |= 0x30;	//Selection du timer 1 comme generateur de bade rate
+}
+
+//Utilise pour la clock de l'UART0
+void configT1(){
+	T1M = 0; //Utilisation de la fréquence normale du quartz 
+	TL1 = 0xDD;	//Initialisation du timer1
+	TH1 = 0xDD;	//Initialisation du chargement du timer1
+	TMOD |= 0x30;	//Activation du mode autoreload
+	// ET1 = 1;	//Autorisation de l'interruption (à voir si necessaire ou non)	
+	TR1 = 1;	//Lancement du timer1
+}
+
+
+
 //------------------------------------------------------------------------------------ 
 // Utilisations 
 //------------------------------------------------------------------------------------ 
@@ -110,6 +140,18 @@ void cfg_crossbar(){
  	T4CON &= 0x7F; 
  } 
 
+//Fonction d'interruption liée à l'UART0
+void int_UART0() interrupt 4 {
+	if (TI0 == 1) {		// interruption due a une fin de transmission
+		TI0 = 0;
+		encours = 0;	
+	} else if (RI0 == 1) {	//interruption due a une fin de reception
+		RI0 = 0;
+		char recup = SBUF0;
+		strcat(reception, recup);
+	}
+} 
+
  
  /** 
   * Conversion d'un angle en la valeur à charger dans un Timer: 
@@ -119,19 +161,20 @@ void cfg_crossbar(){
  float t_pulse; 
  unsigned int timer_count; 
  unsigned int timer_load; 
+
  unsigned int pos2timer_count(){   // int pos
 	pos += 90;  // pos = [0°, 180°] 
-
-// Durée de l'impulsion: 
-	 t_pulse = (t_pos_min + (pos * alpha)); 
+	
+	// Durée de l'impulsion: 
+	t_pulse = (t_pos_min + (pos * alpha)); 
  	 
-// Nombre de coût d'horloge pour généré l'impulsion: 
+	// Nombre de coût d'horloge pour généré l'impulsion: 
 	timer_count = t_pulse* 0.001 * (sysclk); 
  	 
-// Valeur de rechargement du Timer 4: 
+	// Valeur de rechargement du Timer 4: 
  	timer_load = 0xFFFF - timer_count; 
- 	 
-	return timer_load; 
+	return timer_load;
+	
  }  
  
  /** 
@@ -142,7 +185,6 @@ void cfg_crossbar(){
  void servo_pos(){ // int pos
 // Conversion de l'angle en la valeur à charger dans le Timer: 
  	int timer_load = pos2timer_count(); // pos
- 	 
  	// Envoie la commande plusieurs fois au servomoteur: 
  	int i,j,k;
  	for(i = 0; i < 1000; i++) { 
@@ -167,12 +209,105 @@ void cfg_crossbar(){
  	} 
  } 
 
+void Transmit(){
+	REN0 = 0;	//Desactivation de la reception durant la transmission
+	i = 0;
+	while ( i < strlen(message)){
+		if(encours == 0){
+			SBUF0 = message[i];
+			i++;
+			encours = 1;
+		}
+	}
+	message = '';
+	REN0 = 1;	//Activation de la reception d=suite à la transmission
+}
+
+void test_reception(){
+	if ((strcmp(reception[0], 'D') == 0) && (epreuve == 0)) {
+		epreuve = 1;	//Signalement du début de l'epreuve
+		message = "l ........" //Message de bon demarrage de l'epreuve
+		Transmit();	//Transmission du message
+		reception = '';	//Clear de reception et attente de nouvelles instructions
+	} else if ((epreuve == 0) && (strcmp(reception[0], '\0') != 0) {
+		message = '#';	//Message d'erreur
+		reception = '';	//Clear la reception
+		Transmit();	//Transmet le message
+	} else if (epreuve == 1) {
+		char comp[10] = "CS H A:"
+		if (strcmp(reception[0], 'E') == 0) {
+			epreuve = 0;	//Fin d'epreuve
+			reception = '';
+		} else if ((strcmp(reception[0], 'C') != 0) || (strcmp(reception[0], '\0') != 0)) {
+			message = '#';
+			Transmit();
+			reception = '';
+		} else {
+			int i = 0;
+			int messageOK = 1;	//Permet de détecter si le message est bien celui demande
+			for (i=0; i < strlen(comp); i++){
+				if ((strcmp(reception[i], comp[i]) != 0) && (strcmp(reception[i],'\0') != 0)){
+					message = '#';
+					Transmit();
+					reception = '';
+					messageOK = 0;
+					break;
+				} else if (strcmp(reception[i],'\0') != 0){
+					messageOK = 0;
+					break;
+				}
+			}
+			if (messageOK){
+				delay(5000); //delai pour taper l'angle : 5s
+				REN0 = 0;	//Empeche de taper de nouvelles commandes durant le traitement
+				if (strcmp(reception[i+1], '-') == 0){
+					pos = -1;
+					i++;	
+				}
+				if (strlen(reception) == i+3){ //Cas où on a des dizaines
+					if((strcmp(reception[i+1],0x29) > 0) && (strcmp(reception[i+1],0x40)<0) && (strcmp(reception[i+2],0x29) > 0) && (strcmp(reception[i+2],0x40)<0)){
+						pos *= (atoi(reception[i+1])*10 + atoi(reception[i+2]));
+						if ((pos >= -90) && (pos <= 90)){
+							servo_pos();
+							message = "AS H";
+							Transmit();
+						} else {
+							message = '#';
+							Transmit();
+							reception = '';	
+						}
+					} else {
+						message = '#';
+						Transmit();
+						reception = '';	
+					}
+				} else if (strlen(reception) == i+2){
+					if((strcmp(reception[i+1],0x29) > 0) && (strcmp(reception[i+1],0x40)<0)){
+						pos *= atoi(reception[i+1]);
+						servo_pos();
+						message = "AS H";
+						Transmit();
+					} else {
+						message = '#';
+						Transmit();
+						reception = '';	
+					}
+				}
+				REN0 = 1; 	//Permet de taper de nouvelles commandes
+				reception = ''; 
+			}
+		}
+	}
+}
+
 void config(){
 	//Activation des interruptions
 	EA = 1;
 	EIE2 = 0x04;
 	
 	cfg_clk_ext();
+	configUART0();
+	configT1();
 	cfg_timer4();
 	cfg_crossbar();
 	cfg_servo();	
@@ -185,10 +320,10 @@ void main(){
 	
 	config();
 			
-	servo_pos();
+	//servo_pos();
 	
 	while(1){
-
+		test_reception();
 	}
 }
  
