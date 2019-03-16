@@ -27,7 +27,7 @@ var io = require('socket.io').listen(server);
 // Port série 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 9600 });
+const port = new SerialPort('/dev/tty.usbmodem14101', { baudRate: 9600 });
 
 const parser = port.pipe(new Readline());
 

@@ -1,15 +1,13 @@
 //------------------------------------------------------------------------------------
-// Projet_BSE.c
+// pointeur lumineux.c
 //------------------------------------------------------------------------------------
-// DATE: 19/12/18
+// DATE: 11/03/19
 //
 // Target: C8051F02x
 // Tool chain: KEIL Microvision 4
 //
-//  NOMS: Albert, Avinain, Bru, Jannin
-//
-// Numéro du sujet: 1
-// Binôme : B (Avinain, Bru)
+// DEVLOPPE PAR : Bru Natacha, Brouse Léa 
+
 //
 //------------------------------------------------------------------------------------
 #include "c8051F020.h"
@@ -17,17 +15,11 @@
 // LED:
 char blink_led = 0;
 sbit LED = P1^6;
-sbit POINTEUR = P1^4;
 
 // UART
 char UART_buff;
 char UART_busy = 0;
 
-
-// CAN
-sfr16 ADC0 = 0xBE;
-float CSG_min = 0.0f;
-float CSG_max = 30.0f;
 
 //------------------------------------------------------------------------------------
 // CONFIGURATION
@@ -122,24 +114,10 @@ void cfg_UART (void) {
  */
 void cfg_interrupt (void) {
 	EA = 1; // enable all interupts
+	EIE1 |= 0x08;
+	EIP1 |= 0x08;
 }
 
-/**
- * Configuration du convertisseur analogique/numérique
- * @param void
- * @return void
- * Registres modifiés : ADC0CN, AMX0CF, AMX0SL, REF0CN
- */
-void cfg_CAN (void) {
-	REF0CN = 0x03;
-	AMX0CF = 0x0;
-	AMX0SL = 0x0; // AIN0 par défaut
-	AD0CM0 = 0; //conversion pour AD0BUSY = 1
-	AD0CM1 = 0; 
-	AD0TM = 0;
-	AD0LJST = 0; //alignement à droite
-	AD0EN = 1; // activation du  CAN
-}
 
 /**
  * Configuration de la PWM
@@ -150,10 +128,10 @@ void cfg_CAN (void) {
 
 void cfg_PWM(void){
 	PCA0CN |= 0x00;
-	PCA0MD |= 0x08;
-	PCA0CPM0 |= 0x02;
+	PCA0MD |= 0x09;
+	PCA0CPM0 |= 0x42;
 	PCA0CPH0 = 0x00; // initialisé à 0
-	XBR0 |= 0x48;
+	XBR0 |= 0x08;
 	P2MDOUT |= 0x01;
 }
 
@@ -172,8 +150,8 @@ void init (void) {
 	cfg_clk();
 	cfg_UART();
 	cfg_timer2();
-	cfg_CAN();
 	cfg_interrupt();
+	cfg_PWM();
 	
 	XBR2 |= 1<<6;	//Activation du Crossbar
 	
@@ -313,6 +291,10 @@ void UART() interrupt 4 {
 	}
 }
 
+void pointer_interrupt() interrupt 9{
+	PCA0CN &= 0x7F;
+} 
+
 
 //------------------------------------------------------------------------------------
 // APPLICATION
@@ -326,7 +308,7 @@ void UART() interrupt 4 {
 void Welcome() {
 	UART_sendCRLF();
 	UART_sendCRLF();
-	UART_sends("********** CONTROLE DE DISTANCE **********");
+	UART_sends("********** POINTEUR LUMINEUX **********");
 	UART_sendCRLF();
 	UART_sends("Bienvenue :)");
 	UART_sendCRLF();
@@ -337,23 +319,48 @@ void Welcome() {
  * Active le clignotement de la LED:
  * @return void
  */
-void start_blink_led(t_up, t_down, n_period, intensity) {
+void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
 	blink_led = 1;
 	for (int p = 0; p < n_period; p++){
-		int intensite = int(-((intensity * 2,56)-256));
-		PCA0CPH0 |= intensite;
+		float intensite = (-(((float)intensity * 2.56f)-256.0f));
+		int pca = (int) intensite
+		PCA0CPH0 = pca;
 		PCA0CN |= 0x40;
-		delay(t_up);
+		delay(t_up * 1000);
 		PCA0CN |= 0x00;
-		delay (t_down);
+		delay (t_down * 1000);
 	}
 }
+
+void led_on (void){
+	blink_led = 1;
+	PCA0CPH0 = 0x00;
+	PCA0CN |= 0x40;
+}
+
 
 /**
  * Désactive le clignotement de la LED:
  * @return void
  */
-void stop_blink_led() {
+void led_off() {
 	blink_led = 0;
-	POINTEUR = 0;
+	PCA0CPH0 = 0xFF;
+	PCA0CN |= 0x40;
+	
+}
+
+
+//------------------------------------------------------------------------------------
+// TEST
+//------------------------------------------------------------------------------------
+
+int main() {
+	init();
+	Welcome();
+	start_blink_led(3,3,5,50);
+	led_on();
+	delay(5000);
+	led_off();
+	while(1);
 }

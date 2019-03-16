@@ -8,17 +8,15 @@
  Groupe: B2
  
 ------------------------------------------------------------------------------------>
-
-
 <!DOCTYPE HTML>
 <html lang="fr">
 
 <head>
 	<meta charset="UTF-8" />
 	<link rel="stylesheet" href="/ihm.css" media = "screen">
-	<script type='text/javascript' src='/button.js'></script>
-	 <script src="/socket.io/socket.io.js"></script>
-	 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+	<script type="text/javascript" src="/menu.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 	<title>Interface Homme-Machine</title>
 </head>
 
@@ -45,7 +43,7 @@
 		<button class="buttonStop" type="button" value="commande" id="arret" />ARRET D'URGENCE</button>
 		<div class = "deplacements" id = "deplacements">
 			<h3> Déplacements du robot </h3>
-			<button class="button" type="button" value="commande" id="debut" />Debut</button><!--
+			<button class="button" type="button" value="commande" id="debut" />Début</button><!--
 		--><button class="button" type="button" value="commande" id="avance" />Avancer</button><!--
 		--><button class="button" type="button" value="commande" id="recule" />Reculer</button>
 			<button class="button" type="button" value="commande" id="tourne_d" />Rotation droite</button><!--
@@ -69,11 +67,77 @@
 		</div><!--
 	--><div class = "pointeur" id = "pointeur">
 			<h3> Pointeur lumineux </h3>
-			<button class="button" type="button" value="commande" id="active_p"/>Activer</button>
-			<button class="button" type="button" value="commande" id="intensité_plus"/>Intensité + </button>
-			<button class="button" type="button" value="commande" id="intensité_moins"/>Intensité - </button>
+			<form method="post" action="traitement.php">
+			   <p><label>Intensité en % </label> : <input type="number" min=0 max = 100 name="intensité" required /></p>
+			</form>
+			<form method="post" action="traitement.php">
+			   <p><label>Nombre de périodes </label> : <input type="number" min=0 max = 100 name="périodes" default = 0 required /></p>
+			</form>
+			<form method="post" action="traitement.php">
+			   <p><label>Temps allumé (s)</label> :<input type="number" min=0 max = 100 name="allumé" required /></p>
+			</form>
+			<form method="post" action="traitement.php">
+			   <p><label>Temps éteind (s)</label> :<input type="number" min=0 max = 100 name="éteind" required /></p>
+			</form>
+			<input type="submit" class="button" id="active_p" value="Activer" />
+			<button class="button" type="button" value="commande" id="desactive_p"/>Désactiver</button>
 		</div>
 	</div>
+
+<!-- Actions bouttons -->
+<script>
+	var sockets = io.connect('http://localhost:8080');
+	sockets.on('message', function(message) {
+	    alert(message);
+	});
+
+	$('#arret').click(function () {
+	    sockets.emit('message', 'stop');
+	});
+	$('#debut').click(function () {
+	    sockets.emit('message', 'D1');
+	});
+	$('#avance').click(function () {
+	    sockets.emit('message', 'TV vitesse 20 A 20');
+	});
+	$('#recule').click(function () {
+	    sockets.emit('message', 'TV vitesse 20 B 20');
+	});
+	$('#tourne_d').click(function () {
+	    sockets.emit('message', 'TV vitesse 20 RD');
+	});
+	$('#tourne_g').click(function () {
+	    sockets.emit('message', 'TV vitesse 20 RG');
+	});
+	$('#demiTour').click(function () {
+	    sockets.emit('message', 'TV vitesse 20 RC');
+	});
+	$('#stop').click(function () {
+	    sockets.emit('message', 'E');
+	});
+	$('#mesure_d').click(function () {
+	    sockets.emit('message', 'Mesure la distance');
+	});
+	$('#mesure_c').click(function () {
+	    sockets.emit('message', 'Mesure la consommation');
+	});
+	$('#emission').click(function () {
+	    sockets.emit('message', 'Emet un son');
+	});
+	$('#reception').click(function () {
+	    sockets.emit('message', 'Ecoute le son');
+	});
+	$('#image').click(function () {
+	    sockets.emit('message', 'Prends une photo');
+	});
+	$('#active_p').click(function () {
+	    sockets.emit('message', 'Active le pointeur lumineux');
+	});
+	$('#desactive_p').click(function () {
+	    sockets.emit('message', 'Désactive le pointeur lumineux');
+	});
+</script>
+
 
 <!-- Section cartographie -->
 	<div class="cartographie" id="cartographie">

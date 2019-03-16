@@ -184,7 +184,7 @@ nav {
 
 .pointeur{
 	display: inline-block;
-	width: 48%;
+	width: 98%;
 	height: auto;
 	margin-top: 1%;
 	margin:1%;
@@ -192,6 +192,8 @@ nav {
 	vertical-align: middle;
 	position:relative;
 }
+
+
 
 /*styles généraux des titres, corps, paragraphes, images et légendes*/
 
@@ -264,6 +266,20 @@ legend{
 	color: black;
     font-family: 'Baskerville', sans-serif;
 	letter-spacing: 5px;
+}
+
+
+label{
+	display: inline-block;
+	color: black;
+	font-style: normal;
+	letter-spacing: 2px;
+	font-family: 'Baskerville', sans-serif;
+	text-align: left;
+}
+
+form {
+	display: inline-block;
 }
 
 
