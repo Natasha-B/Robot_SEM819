@@ -77,7 +77,7 @@
 			   <p><label>Temps allumé (s)</label> :<input type="number" min=0 max = 100 name="allumé" required /></p>
 			</form>
 			<form method="post" action="traitement.php">
-			   <p><label>Temps éteind (s)</label> :<input type="number" min=0 max = 100 name="éteind" required /></p>
+			   <p><label>Temps éteint (s)</label> :<input type="number" min=0 max = 100 name="éteind" required /></p>
 			</form>
 			<input type="submit" class="button" id="active_p" value="Activer" />
 			<button class="button" type="button" value="commande" id="desactive_p"/>Désactiver</button>
@@ -131,10 +131,10 @@
 	    sockets.emit('message', 'Prends une photo');
 	});
 	$('#active_p').click(function () {
-	    sockets.emit('message', 'Active le pointeur lumineux');
+	    sockets.emit('message', 'PO Tallumé Tstop Nperiodes Intensite');
 	});
 	$('#desactive_p').click(function () {
-	    sockets.emit('message', 'Désactive le pointeur lumineux');
+	    sockets.emit('message', 'PX');
 	});
 </script>
 

@@ -48,8 +48,9 @@ parser.on('error', function(err) {
 // Reception du message d'init
 parser.on('data', function (data) {
   console.log('Message: ', data);
-  io.to("all").emit('message', data);
+  io.to('all').emit('message', data);
 });
+
 
 //------------------------------------------------------------------------------------
 // GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
@@ -58,16 +59,16 @@ parser.on('data', function (data) {
 
 io.sockets.on('connection', function (socket) {
     socket.emit('message', "Vous êtes bien connecté à l'IHM!");
-    socket.join("all");
+    socket.join('all');
 
     // Quand le serveur reçoit un signal de type "message" du client    
     socket.on('message', function (message) {
         console.log("Message de l'IHM :  "+ message);
         port.write( message, function(err) {
-	    if (err) {
-	    	return console.log('Error on write: ', err.message);
-	  	}
-	  	console.log('message envoyé au robot');
+          if (err) {
+            return console.log('Error on write: ', err.message);
+	  	    }
+	  	  console.log('message envoyé au robot : ', message);
 	  	});
     });
 });
