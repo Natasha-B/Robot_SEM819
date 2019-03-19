@@ -59,6 +59,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <intrins.h>
+#include "servomoteur.h"
 
 
 
@@ -334,19 +335,24 @@ void putChar1(char carac){
 	
 	void transfert (char* stock) {
 	char vitesse2[3]="";
+	char angle[3]="";
 	int i=0;
 	int n=0;
+	int j = 0;
+	int machin = 0;
+	int position_servo = 1;
 	if(stock[0]=='D'){			// Début Epreuve
-		serOutstring("******Epreuve 1******\n\r");
+		serOutstring("******Epreuve 1******");
 		epreuve=1;
 		}
 	else if(stock[0]=='E'){						// Fin Epreuve
 		epreuve=0;
-		serOutstring("******Fin Epreuve******\n\r");
+		serOutstring("******Fin Epreuve******");
 		}
 	else{
 		if (epreuve==1){
 			if((stock[1]=='V')&&(stock[0]='T')){								// TV vitesse
+				vitesse[2]='\0';
 				for (i=3;i<=strlen(stock);i++){
 					vitesse[i-3]=stock[i];
 					}
@@ -366,7 +372,6 @@ void putChar1(char carac){
 				if (strlen(stock)==1){
 					//serOutstring("coucou");
 					avance(vitesse);
-					serOutstring("coucou");
 					serOutstring(vitesse);
 					}
 				else{
@@ -421,6 +426,29 @@ void putChar1(char carac){
 					putString1("digo 1:173:-20 2:173:20\r");
 					}
 				}
+			
+			//servomoteur
+			else if((stock[1]=='S')&&(stock[0]='C')&&(stock[2]==' ')&&(stock[3]='H')&&(stock[4]==' ')&&(stock[5]='A')&&(stock[6]=':')){
+				for (i=7;i<=strlen(stock);i++){
+					angle[i-7]=stock[i];
+				}
+				j=0;
+				if (angle[j] == '-'){
+						position_servo *= -1;
+						j++;
+				}
+				else{
+				}
+				machin = atoi(angle);
+				if (((machin)>= 0)&&(machin<=90)){
+					position_servo *= machin;
+					servo_pos(position_servo);
+					serOutstring("AS H");
+				}else{
+					serOutchar('#');
+				}
+			}
+			
 			else{
 				serOutchar('#');
 			}
@@ -429,6 +457,7 @@ void putChar1(char carac){
 			serOutchar('#');
 		}
 	}
+	serOutstring("\n\r");
 	/*else if(stock[1]=='A')&(stock[0]='R'){						// Rotation angle donné
 		if (stock[3]=='D'){
 			if (strlen(stock)>5){

@@ -48,11 +48,14 @@
 #include <intrins.h>
 #include <string.h>
 
+#include "servomoteur.h"
 #include <UART0_RingBuffer_lib.h>
 #ifndef CFG_Globale
   #define CFG_Globale
   #include <CFG_Globale.h>
 #endif
+
+
 
 sbit BP = P3^7;     
 
