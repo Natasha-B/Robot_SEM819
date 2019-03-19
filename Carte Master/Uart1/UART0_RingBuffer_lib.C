@@ -265,6 +265,11 @@ void cfg_Clock_UART(void)
 	TR1 = 1;				   // Timer1 démarré
 
 }
+/*
+void time2 interrupt 5(void){
+	T2 &= 0x7F;
+}
+*/
  
 
 //*****************************************************************************	 
@@ -289,7 +294,7 @@ void cfg_UART1_mode1(void)
 		PCON &= 0xF7;  // SSTAT1=0
 		SCON1 = 0x60;   // Mode 1 - Check Stop bit - stock validée
 	
-    EIE2 |= 0x40;        // interruption UART0 autorisée	ES1=1
+    //EIE2 |= 0x40;        // interruption UART0 autorisée	ES1=1
 }
 
 void putChar1(char carac){
@@ -332,10 +337,12 @@ void putChar1(char carac){
 	int i=0;
 	int n=0;
 	if(stock[0]=='D'){			// Début Epreuve
+		serOutstring("******Epreuve 1******\n\r");
 		epreuve=1;
 		}
 	else if(stock[0]=='E'){						// Fin Epreuve
 		epreuve=0;
+		serOutstring("******Fin Epreuve******\n\r");
 		}
 	else{
 		if (epreuve==1){
@@ -343,35 +350,53 @@ void putChar1(char carac){
 				for (i=3;i<=strlen(stock);i++){
 					vitesse[i-3]=stock[i];
 					}
-				serOutchar('<');
+				if ((strlen(vitesse)==3)&&(((vitesse[0]==1)&&(vitesse[1]>0)&&(vitesse[2]>0))||vitesse[0]>1)){
+					serOutchar('#');
+					vitesse[0]='2';
+					vitesse[1]='0';
+					vitesse[2]='\0';
 				}
+				else{
+					serOutchar('>');
+					
+			}
+		}
 
 			else if(stock[0]=='A'){			// Avancer	
 				if (strlen(stock)==1){
+					//serOutstring("coucou");
 					avance(vitesse);
+					serOutstring("coucou");
+					serOutstring(vitesse);
 					}
 				else{
 					for (i = 2;i<strlen(stock);i++){
 							vitesse2[i-2]=stock[i];
 						}
 					avance(vitesse2);
+					serOutstring(vitesse2);
 					}
+				
 				}
 			
 			else if(stock[0]=='B'){																	// Reculer
 				if (strlen(stock)==1){
 					recule(vitesse);
+					serOutstring(vitesse);
 					}
 				else{
 					for (i = 2;i<strlen(stock);i++){
 							vitesse2[i-2]=stock[i];		
 					}
 					recule(vitesse2);
+					serOutstring(vitesse2);
 					}
+				
 				}
 
 			else if(stock[0]=='S'){																	// STOP
 				putString1("stop\r");
+				serOutstring("stop");
 			}
 			
 			else if((stock[1]=='D')&&(stock[0]='R')){			// Rotation Droite 90°
@@ -385,16 +410,20 @@ void putChar1(char carac){
 			else if((stock[1]=='C')&&(stock[0]='R')){								// Rotation Complete 180°
 				if (stock[3]=='D'){
 					putString1("digo 1:692:-20 2:692:20\r");
+					serOutstring("ok");
 					}
-				else{
+				else if(stock[3]=='G'){
 					putString1("digo 1:692:20 2:692:-20\r");
 					}
 				}
-			else if((stock[1]=='C')&&(stock[0]='R')){								// Rotation Complete 180°
-				if ((stock[3]=='G')&&(stock[4]==':')){
+			else if((stock[1]=='A')&&(stock[0]='R')){								// Rotation 45°
+				if ((stock[3]=='G')&&(stock[4]==':')&&(stock[5]=='4')&&(stock[6]=='5')){
 					putString1("digo 1:173:-20 2:173:20\r");
 					}
 				}
+			else{
+				serOutchar('#');
+			}
 			}
 		else{
 			serOutchar('#');
