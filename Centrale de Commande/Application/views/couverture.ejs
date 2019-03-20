@@ -41,47 +41,121 @@
 	<div class = "controles" id = "controles">
 		<h2>Actions du robot SEM819</h2>
 		<button class="buttonStop" type="button" value="commande" id="arret" />ARRET D'URGENCE</button>
-		<div class = "deplacements" id = "deplacements">
+
+
+		<div class = "epreuve" id = "epreuve">
+			<h3> Epreuve </h3>
+			<form method="post" action="traitement.php">
+			   <p><label>Epreuve n° </label> : <input type="number" id="E" min=1 max = 8 name="epreuve" value=1 required /></p>
+			</form>
+			<input type="submit" class="button" id="debut" value="Debut d'épreuve" /><!--
+		--><button class="button" type="button" value="commande" id="fin" />Fin d'épreuve</button>
+		</div><!--
+
+
+	 --><div class = "vitesse" id = "vitesse">
+			<h3> Vitesse </h3>
+			<form method="post" action="traitement.php">
+			   <p><label>Vitesse du robot (%) </label> : <input type="number" id ="V" min=5 max = 100 name="vitesse" value= 20 required /></p>
+			</form><!--
+		--><input type="submit" class="button" id="Vit_def" value="Valider" />
+		</div><!--
+
+
+	 --><div class = "servomoteurs" id = "servomoteurs">
+			<h3> Rotation des servomoteurs </h3>
+		<button class="button" type="button" value="commande" id="rotation_servo" />Rotation</button><!--	
+		--><form method="post" action="traitement.php">
+		   <p><label>Servomoteur </label> : <select id="servo"> <option value="H">Horizontal</option> <option value="V">Vertical</option></select></p>
+		</form><!--
+		-->	<form method="post" action="traitement.php">
+			   <p><label>Angle de rotation (°)</label> : <input type="number" id ="A_servo" min=1 max = 180 name="vitesse" value= 90 required /></p>
+			</form>
+		</div><!--
+
+
+		--><div class = "deplacements" id = "deplacements">
 			<h3> Déplacements du robot </h3>
-			<button class="button" type="button" value="commande" id="debut" />Début</button><!--
-		--><button class="button" type="button" value="commande" id="avance" />Avancer</button><!--
+			<button class="button" type="button" value="commande" id="avance" />Avancer</button><!--
 		--><button class="button" type="button" value="commande" id="recule" />Reculer</button>
 			<button class="button" type="button" value="commande" id="tourne_d" />Rotation droite</button><!--
 		--><button class="button" type="button" value="commande" id="tourne_g" />Rotation gauche</button><!--
 		--><button class="button" type="button" value="commande" id="demiTour" />Demi tour</button><!--
+		--><form method="post" action="traitement.php">
+			   <p><label>Sens de rotation </label> : <select id="sens"> <option value="D">Droite</option> <option value="G">Gauche</option></select></p>
+			</form><!--
+		--><button class="button" type="button" value="commande" id="rotation" />Rotation</button><!--	
+		-->	<form method="post" action="traitement.php">
+			   <p><label>Angle de rotation (°)</label> : <input type="number" id ="A" min=1 max = 180 name="vitesse" value= 90 required /></p>
+			</form><!--
 		--><button class="button" type="button" value="commande" id="stop" />Stop</button>
-		</div>
-		<div class = "mesure" id = "mesure">
+		</div><!--
+
+
+	 --><div class = "mesure" id = "mesure">
 			<h3> Activation des capteurs de mesure </h3>
 			<button class="button" type="button" value="commande" id="mesure_d" />Mesure de distance</button>
-			<button class="button" type="button" value="commande" id="mesure_c" />Mesure de consommation</button>
+			<button class="button" type="button" value="commande" id="mesure_c" />Mesure de courant</button>
+			<button class="button" type="button" value="commande" id="mesure_e" />Mesure d'énergie</button>
 		</div><!--
+
+
 	--><div class = "son" id = "son">
 			<h3> Gestion du son </h3>
 			<button class="button" type="button" value="commande" id="emission" />Emission de son</button>
+			<form method="post" action="traitement.php">
+			   <p><label>Code fréquence </label> : <input type="number" id="F" min=1 max = 99 name="Code_frequence " value=6 required /></p>
+			</form>
+			<form method="post" action="traitement.php">
+			   <p><label>Durée d'émission (x10 ms) </label> : <input type="number" id="D_e" min=1 max = 99 name="Durée_son" value=25 required /></p>
+			</form>
+			<form method="post" action="traitement.php">
+			   <p><label>Durée du silence (x10 ms) </label> : <input type="number" id="D_s" min=1 max = 99 name="Durée_silence" value=50 required /></p>
+			</form>
+			<form method="post" action="traitement.php">
+			   <p><label>Nombre de bips </label> : <input type="number" id="N_b" min=1 max = 99 name="Nombre_bips" value=3 required /></p>
+			</form>
 			<button class="button" type="button" value="commande" id="reception" />Acquisition de son</button>
+			<form method="post" action="traitement.php">
+			   <p><label>Durée d'acquisition (x100 ms) </label> : <input type="number" id="D_a" min=1 max = 99 name="durée_acq" value=50 required /></p>
+			</form>
 		</div><!--
+
+
 	--><div class = "images" id = "images">
 			<h3> Gestion images </h3>
-			<button class="button" type="button" value="commande" id="image" />Prise de vue</button>
+			<button class="button" type="button" value="commande" id="image" />Prise de vue</button><!--
+			--><form method="post" action="traitement.php">
+			   <p><label>Options</label> : <select id="options_img"> <option value="O">Photo unique</option> <option value="C">Prise en continu</option><option value="S">Prise de N clichés</option></select></p>
+			</form><!--
+		--><form method="post" action="traitement.php">
+			   <p><label>Durée entre 2 clichés (x100 ms) </label> : <input type="number" id="D_cliches" min=1 max = 99 name="D_cliches" value=1 required /></p>
+			</form><!--
+			--><form method="post" action="traitement.php">
+			   <p><label> Nombre de clichés </label> : <input type="number" id="N_cliches" min=1 max = 255 name="Nombre_cliches" value=1 required /></p>
+			</form><!--
+			--><button class="button" type="button" value="commande" id="image_f" />Fin de la prise</button>
 		</div><!--
+
+
 	--><div class = "pointeur" id = "pointeur">
 			<h3> Pointeur lumineux </h3>
 			<form method="post" action="traitement.php">
-			   <p><label>Intensité en % </label> : <input type="number" min=0 max = 100 name="intensité" required /></p>
+			   <p><label>Intensité en % </label> : <input type="number" id="I" min=1 max = 100 name="intensité" value=100 required /></p>
 			</form>
 			<form method="post" action="traitement.php">
-			   <p><label>Nombre de périodes </label> : <input type="number" min=0 max = 100 name="périodes" default = 0 required /></p>
+			   <p><label>Nombre de périodes </label> : <input type="number" id ="N" min=1 max = 99 name="périodes" value=1 required /></p>
 			</form>
 			<form method="post" action="traitement.php">
-			   <p><label>Temps allumé (s)</label> :<input type="number" min=0 max = 100 name="allumé" required /></p>
+			   <p><label>Temps allumé (x100 ms)</label> :<input type="number" id ="D1"  min=1 max = 99 name="allumé" value=99 required /></p>
 			</form>
 			<form method="post" action="traitement.php">
-			   <p><label>Temps éteint (s)</label> :<input type="number" min=0 max = 100 name="éteind" required /></p>
+			   <p><label>Temps éteint (x100 ms) </label> :<input type="number" id ="D2" min=0 max = 99 name="éteind" value=0 required /></p>
 			</form>
 			<input type="submit" class="button" id="active_p" value="Activer" />
 			<button class="button" type="button" value="commande" id="desactive_p"/>Désactiver</button>
 		</div>
+
 	</div>
 
 <!-- Actions bouttons -->
@@ -92,49 +166,67 @@
 	});
 
 	$('#arret').click(function () {
-	    sockets.emit('message', 'stop');
+	    sockets.emit('message', 'Q');
 	});
 	$('#debut').click(function () {
-	    sockets.emit('message', 'D1');
+	    sockets.emit('message', 'D'+ $("#E").val());
+	});
+	$('#fin').click(function () {
+	    sockets.emit('message', 'E');
+	});
+	$('#Vit_def').click(function () {
+	    sockets.emit('message', 'TV ' + $("#V").val());
+	});
+	$('#rotation_servo').click(function () {
+	    sockets.emit('message', 'CS ' + $("#servo").val() + $("#A_servo").val());
 	});
 	$('#avance').click(function () {
-	    sockets.emit('message', 'TV vitesse 20 A 20');
+	    sockets.emit('message', 'A ' + $("#V").val());
 	});
 	$('#recule').click(function () {
-	    sockets.emit('message', 'TV vitesse 20 B 20');
+	    sockets.emit('message', 'B ' + $("#V").val());
 	});
 	$('#tourne_d').click(function () {
-	    sockets.emit('message', 'TV vitesse 20 RD');
+	    sockets.emit('message', 'RD');
 	});
 	$('#tourne_g').click(function () {
-	    sockets.emit('message', 'TV vitesse 20 RG');
+	    sockets.emit('message', 'RG');
 	});
 	$('#demiTour').click(function () {
-	    sockets.emit('message', 'TV vitesse 20 RC');
+	    sockets.emit('message', 'RC '+ $("#sens").val());
+	});
+	$('#rotation').click(function () {
+	    sockets.emit('message', 'RA '+ $("#sens").val() + ':' + $("#A").val());
 	});
 	$('#stop').click(function () {
-	    sockets.emit('message', 'E');
+	    sockets.emit('message', 'S');
 	});
 	$('#mesure_d').click(function () {
 	    sockets.emit('message', 'Mesure la distance');
 	});
 	$('#mesure_c').click(function () {
-	    sockets.emit('message', 'Mesure la consommation');
+	    sockets.emit('message', 'MI');
+	});
+	$('#mesure_e').click(function () {
+	    sockets.emit('message', 'ME');
 	});
 	$('#emission').click(function () {
-	    sockets.emit('message', 'Emet un son');
+	    sockets.emit('message', 'SD F:' + $("#F").val() + ' P:' +(($("#D_e").val())*10) + ' W:' +(($("#D_s").val())*10) + ' B:' +$("#N_b").val());
 	});
 	$('#reception').click(function () {
-	    sockets.emit('message', 'Ecoute le son');
+	    sockets.emit('message', 'ASS '+ (($("#D_a").val())/10));
 	});
 	$('#image').click(function () {
-	    sockets.emit('message', 'Prends une photo');
+	    sockets.emit('message', 'PPH '+ $("#options_img").val() + ' E:'+(($("#D_cliches").val())/10) + ' N:'+ $("#N_cliches").val());
+	});
+	$('#image_f').click(function () {
+	    sockets.emit('message', 'SPH');
 	});
 	$('#active_p').click(function () {
-	    sockets.emit('message', 'PO Tallumé Tstop Nperiodes Intensite');
+	    sockets.emit('message', 'L I:' + $("#I").val() + ' D:' +(($("#D1").val())/10) + ' E:' +(($("#D2").val())/10) + ' N:' +$("#N").val());
 	});
 	$('#desactive_p').click(function () {
-	    sockets.emit('message', 'PX');
+	    sockets.emit('message', 'LS');
 	});
 </script>
 
