@@ -8,4 +8,5 @@ void cfg_UART0_mode1(void);
 void cfg_UART1_mode1(void);
 void ecoute(void);
 void sendUART0(char c);
+void mon_itoa(int chiffre, char* distance_obs);
 	

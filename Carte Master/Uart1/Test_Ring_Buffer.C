@@ -49,6 +49,7 @@
 #include <string.h>
 
 #include "servomoteur.h"
+#include "telemetre_ultrason.h"
 #include <UART0_RingBuffer_lib.h>
 #ifndef CFG_Globale
   #define CFG_Globale
@@ -73,7 +74,10 @@ void Oscillator_Init()
 }
 void Port_IO_Init()
 {
-   P0MDOUT   =  0x01;
+	 
+	 P1MDOUT |= 0x04;
+   P0MDOUT   =  0x41;	
+	 
 	 XBR0      = 0x06;
    XBR2      = 0x44;
 	 XBR1			 = 0x80;
@@ -98,6 +102,8 @@ void main(void) {
 	   cfg_Clock_UART();
      cfg_UART0_mode1();
 		 cfg_UART1_mode1();
+		 config_telem_ultrason();
+	   config_servo();
      init_Serial_Buffer();                            
      EA = 1;                              /* allow interrupts to happen */
 	
