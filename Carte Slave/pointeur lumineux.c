@@ -12,12 +12,9 @@
 //------------------------------------------------------------------------------------
 #include "c8051F020.h"
 
-// LED:
-char blink_led = 0;
-sbit LED = P1^6;
 
 // UART
-char UART_buff;
+char UART_buff [50];
 char UART_busy = 0;
 
 
@@ -58,18 +55,6 @@ void cfg_clk (void){
 	OSCICN = 0x1c;
 }
 
-
-/**
- * Configuration du port de la LED(P1.6)
- * Registre modifiés:PMD1OUT, P1.6
- * @param void
- * @return void
- */
-void cfg_LED(){
-	
-	P1MDOUT |= 0x40;  // Autorisation de la LED  
-	LED = 0;  
-}
 
 
 /**
@@ -154,9 +139,6 @@ void init (void) {
 	cfg_PWM();
 	
 	XBR2 |= 1<<6;	//Activation du Crossbar
-	
-	cfg_LED();
-	
 }
 
 /**
@@ -248,9 +230,11 @@ void UART_sendi (char *prefix, int a, char *suffix) {
  */
 void UART_receive (void) {
 	char invalid_cmd = 0;
-	if(UART_buff == 0x00)
+	if(UART_buff == 0)
 		return;
-	
+
+
+/*	
 	switch (UART_buff) {
 		// Mode automatique
 		case 'UART_buff[0] == A':
@@ -266,7 +250,7 @@ void UART_receive (void) {
 			break;
 	}
 			
-	UART_sends(invalid_cmd ? "Invalid command !" : "OK");
+	UART_sends(invalid_cmd ? "Invalid command !" : "OK");*/
 	UART_sendCRLF();
 	UART_buff = 0x00;
 }
@@ -320,7 +304,6 @@ void Welcome() {
  * @return void
  */
 void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
-	blink_led = 1;
 	for (int p = 0; p < n_period; p++){
 		float intensite = (-(((float)intensity * 2.56f)-256.0f));
 		int pca = (int) intensite
@@ -333,7 +316,6 @@ void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
 }
 
 void led_on (void){
-	blink_led = 1;
 	PCA0CPH0 = 0x00;
 	PCA0CN |= 0x40;
 }
@@ -344,7 +326,6 @@ void led_on (void){
  * @return void
  */
 void led_off() {
-	blink_led = 0;
 	PCA0CPH0 = 0xFF;
 	PCA0CN |= 0x40;
 	
@@ -362,5 +343,7 @@ int main() {
 	led_on();
 	delay(5000);
 	led_off();
-	while(1);
+	while(1){
+		UART_receive();
+	};
 }
