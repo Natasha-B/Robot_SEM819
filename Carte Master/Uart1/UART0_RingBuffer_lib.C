@@ -73,8 +73,8 @@
 // Paramètresd modifiables
 //*************************************************************************************************
 #define       MAX_BUFLEN 32 // Taille des buffers de données
-char vitesse[3]="20";
-int epreuve=0;
+xdata char vitesse[3]="20";
+xdata int epreuve=0;
 
 //*************************************************************************************************
 // DEFINITION DES MACROS DE GESTION DE BUFFER CIRCULAIRE
@@ -322,7 +322,7 @@ void putChar1(char carac){
 	
 	
 	void recule(char* vitesse){
-		putString1("digo 1:-");
+		putString1("mogo 1:-");
 		putString1(vitesse);
 		putString1(" 2:-");
 		putString1(vitesse);
@@ -372,7 +372,8 @@ void putChar1(char carac){
 				if (strlen(stock)==1){
 					//serOutstring("coucou");
 					avance(vitesse);
-					serOutstring(vitesse);
+					//putString1("mo");
+					//serOutstring(vitesse);
 					}
 				else{
 					for (i = 2;i<strlen(stock);i++){
@@ -405,25 +406,25 @@ void putChar1(char carac){
 			}
 			
 			else if((stock[1]=='D')&&(stock[0]='R')){			// Rotation Droite 90°
-				putString1("digo 1:346:20 2:346:-20\r");
+				putString1("digo 1:1000:-20 2:1000:20\r");
 				}
 			
 			else if((stock[1]=='G')&&(stock[0]='R')){								// Rotation Gauche 90°
-				putString1("digo 1:346:-20 2:346:20\r");
+				putString1("digo 1:1000:20 2:1000:-20\r");
 				}
 			
 			else if((stock[1]=='C')&&(stock[0]='R')){								// Rotation Complete 180°
 				if (stock[3]=='D'){
-					putString1("digo 1:692:-20 2:692:20\r");
+					putString1("digo 1:2050:-20 2:2050:20\r");
 					serOutstring("ok");
 					}
 				else if(stock[3]=='G'){
-					putString1("digo 1:692:20 2:692:-20\r");
+					putString1("digo 1:2050:20 2:2050:-20\r");
 					}
 				}
 			else if((stock[1]=='A')&&(stock[0]='R')){								// Rotation 45°
 				if ((stock[3]=='G')&&(stock[4]==':')&&(stock[5]=='4')&&(stock[6]=='5')){
-					putString1("digo 1:173:-20 2:173:20\r");
+					putString1("digo 1:500:-20 2:500:20\r");
 					}
 				}
 			
@@ -432,15 +433,15 @@ void putChar1(char carac){
 				for (i=7;i<=strlen(stock);i++){
 					angle[i-7]=stock[i];
 				}
-				j=0;
-				if (angle[j] == '-'){
-						position_servo *= -1;
-						j++;
-				}
-				else{
-				}
+//				j=0;
+//				if (angle[j] == '-'){
+//						position_servo *= -1;
+//						j++;
+//				}
+//				else{
+//				}
 				machin = atoi(angle);
-				if (((machin)>= 0)&&(machin<=90)){
+				if (((machin)>= -90)&&(machin<=90)){
 					position_servo *= machin;
 					servo_pos(position_servo);
 					serOutstring("AS H");
