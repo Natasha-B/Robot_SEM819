@@ -1,7 +1,6 @@
 <!----------------------------------------------------------------------------------
- Projet_Transversal - button.js
+ Projet_Transversal - couverture.ejs (HTML)
 ------------------------------------------------------------------------------------
- DATE: 27/02/19
 
  DEVELOPPEUR: BRU Natacha
  
@@ -30,8 +29,8 @@
 	<nav id= "menu">
 		<ul class="bar">
       		<li class="liste"><a href="#controles">Contrôles robot</a></li>
+      		<li class="liste"><a href="#indicateurs" >Messages du robot</a></li>
       		<li class="liste"><a href="#cartographie" >Cartographie</a></li>
-      		<li class="liste"><a href="#indicateurs" >Indicateurs</a></li>
      		<li class="liste"><a href="/assistance" >Assistance</a></li>
   		</ul>
 	</nav>
@@ -45,50 +44,53 @@
 
 		<div class = "epreuve" id = "epreuve">
 			<h3> Epreuve </h3>
-			<form method="post" action="traitement.php">
-			   <p><label>Epreuve n° </label> : <input type="number" id="E" min=1 max = 8 name="epreuve" value=1 required /></p>
+			<form method="post">
+			   <p><label>Type d'épreuve </label> : <input type="number" id="E" min=1 max = 8 name="type_épreuve" value=1 required /></p>
 			</form>
-			<input type="submit" class="button" id="debut" value="Debut d'épreuve" /><!--
+			<input type="submit" class="button" id="debut" value="Début d'épreuve" /><!--
 		--><button class="button" type="button" value="commande" id="fin" />Fin d'épreuve</button>
 		</div><!--
 
 
-	 --><div class = "vitesse" id = "vitesse">
-			<h3> Vitesse </h3>
-			<form method="post" action="traitement.php">
-			   <p><label>Vitesse du robot (%) </label> : <input type="number" id ="V" min=5 max = 100 name="vitesse" value= 20 required /></p>
-			</form><!--
-		--><input type="submit" class="button" id="Vit_def" value="Valider" />
-		</div><!--
-
-
 	 --><div class = "servomoteurs" id = "servomoteurs">
-			<h3> Rotation des servomoteurs </h3>
-		<button class="button" type="button" value="commande" id="rotation_servo" />Rotation</button><!--	
-		--><form method="post" action="traitement.php">
+			<h3> Rotation des servomoteurs </h3>	
+		<form method="post">
 		   <p><label>Servomoteur </label> : <select id="servo"> <option value="H">Horizontal</option> <option value="V">Vertical</option></select></p>
 		</form><!--
-		-->	<form method="post" action="traitement.php">
+		-->	<form method="post">
 			   <p><label>Angle de rotation (°)</label> : <input type="number" id ="A_servo" min=1 max = 180 name="vitesse" value= 90 required /></p>
-			</form>
+			</form><!--
+		--><button class="button" type="button" value="commande" id="rotation_servo" />Rotation</button>
 		</div><!--
 
 
 		--><div class = "deplacements" id = "deplacements">
 			<h3> Déplacements du robot </h3>
+			<div class = "deplacements1">
 			<button class="button" type="button" value="commande" id="avance" />Avancer</button><!--
-		--><button class="button" type="button" value="commande" id="recule" />Reculer</button>
-			<button class="button" type="button" value="commande" id="tourne_d" />Rotation droite</button><!--
-		--><button class="button" type="button" value="commande" id="tourne_g" />Rotation gauche</button><!--
-		--><button class="button" type="button" value="commande" id="demiTour" />Demi tour</button><!--
-		--><form method="post" action="traitement.php">
+		--><button class="button" type="button" value="commande" id="recule" />Reculer</button><!--
+		--></div><!--
+		 --><div class = "deplacements1">
+			<form method="post">
+			   <p><label>Vitesse du robot (%) </label> : <input type="number" id ="V" min=5 max = 100 name="vitesse" value= 20 required /></p>
+			</form><!--
+		--><input type="submit" class="button" id="Vit_def" value="Valider" /><!--
+		--></div><!--
+		 --><div class = "deplacements1">
+			<button class="button" type="button" value="commande" id="tourne_d" />Rotation 90° droite</button><!--
+		 --><button class="button" type="button" value="commande" id="tourne_g" />Rotation 90° gauche</button><!--
+		 --><button class="button" type="button" value="commande" id="demiTour" />Demi tour</button><!--
+		 --></div><!--
+		--> <div class = "deplacements1"><!--
+		--> <form method="post">
 			   <p><label>Sens de rotation </label> : <select id="sens"> <option value="D">Droite</option> <option value="G">Gauche</option></select></p>
 			</form><!--
-		--><button class="button" type="button" value="commande" id="rotation" />Rotation</button><!--	
-		-->	<form method="post" action="traitement.php">
+		--> <form method="post">
 			   <p><label>Angle de rotation (°)</label> : <input type="number" id ="A" min=1 max = 180 name="vitesse" value= 90 required /></p>
 			</form><!--
-		--><button class="button" type="button" value="commande" id="stop" />Stop</button>
+		--> <button class="button" type="button" value="commande" id="rotation" />Rotation</button><!--	
+		--> <button class="button" type="button" value="commande" id="stop" />Stop</button><!--
+		--> </div>
 		</div><!--
 
 
@@ -99,24 +101,37 @@
 			<button class="button" type="button" value="commande" id="mesure_e" />Mesure d'énergie</button>
 		</div><!--
 
+	--><div class = "detection_obstacles" id = "detection_obstacles" >
+			<h3> Détection d'obstacles </h3>
+			<form method="post">
+			   <p><label>Type de détection</label> : <select id="options_detect"> <option value="MOU">Unique</option> <option value="MOB">Balayage</option><option value="MOS">Obstacle le plus proche</option></select></p>
+			</form><!--
+			--><form method="post">
+			   <p><label>Capteur</label> : <select id="capt_detect"> <option value = >Capteur avant</option> <option value="D">Capteurs avant + arrière</option></select></p>
+			</form><!--
+			--><form method="post">
+			   <p><label>Resolution angulaire (°)</label> : <input type="number" id ="angle_res" min=5 max = 45 step = 5 name="resolution" value= 30 required /></p></p>
+			</form><!--
+		-->	<button class="button" type="button" value="commande" id="obstacle_detect" />Détection d'obstacle</button>
+		</div><!--
 
 	--><div class = "son" id = "son">
 			<h3> Gestion du son </h3>
 			<button class="button" type="button" value="commande" id="emission" />Emission de son</button>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Code fréquence </label> : <input type="number" id="F" min=1 max = 99 name="Code_frequence " value=6 required /></p>
 			</form>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Durée d'émission (x10 ms) </label> : <input type="number" id="D_e" min=1 max = 99 name="Durée_son" value=25 required /></p>
 			</form>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Durée du silence (x10 ms) </label> : <input type="number" id="D_s" min=1 max = 99 name="Durée_silence" value=50 required /></p>
 			</form>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Nombre de bips </label> : <input type="number" id="N_b" min=1 max = 99 name="Nombre_bips" value=3 required /></p>
 			</form>
 			<button class="button" type="button" value="commande" id="reception" />Acquisition de son</button>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Durée d'acquisition (x100 ms) </label> : <input type="number" id="D_a" min=1 max = 99 name="durée_acq" value=50 required /></p>
 			</form>
 		</div><!--
@@ -124,32 +139,32 @@
 
 	--><div class = "images" id = "images">
 			<h3> Gestion images </h3>
-			<button class="button" type="button" value="commande" id="image" />Prise de vue</button><!--
-			--><form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Options</label> : <select id="options_img"> <option value="O">Photo unique</option> <option value="C">Prise en continu</option><option value="S">Prise de N clichés</option></select></p>
 			</form><!--
-		--><form method="post" action="traitement.php">
+		--><form method="post">
 			   <p><label>Durée entre 2 clichés (x100 ms) </label> : <input type="number" id="D_cliches" min=1 max = 99 name="D_cliches" value=1 required /></p>
 			</form><!--
-			--><form method="post" action="traitement.php">
+			--><form method="post">
 			   <p><label> Nombre de clichés </label> : <input type="number" id="N_cliches" min=1 max = 255 name="Nombre_cliches" value=1 required /></p>
 			</form><!--
+			--><button class="button" type="button" value="commande" id="image" />Prise de vue</button><!--
 			--><button class="button" type="button" value="commande" id="image_f" />Fin de la prise</button>
 		</div><!--
 
 
 	--><div class = "pointeur" id = "pointeur">
 			<h3> Pointeur lumineux </h3>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Intensité en % </label> : <input type="number" id="I" min=1 max = 100 name="intensité" value=100 required /></p>
 			</form>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Nombre de périodes </label> : <input type="number" id ="N" min=1 max = 99 name="périodes" value=1 required /></p>
 			</form>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Temps allumé (x100 ms)</label> :<input type="number" id ="D1"  min=1 max = 99 name="allumé" value=99 required /></p>
 			</form>
-			<form method="post" action="traitement.php">
+			<form method="post">
 			   <p><label>Temps éteint (x100 ms) </label> :<input type="number" id ="D2" min=0 max = 99 name="éteind" value=0 required /></p>
 			</form>
 			<input type="submit" class="button" id="active_p" value="Activer" />
@@ -201,6 +216,9 @@
 	$('#stop').click(function () {
 	    sockets.emit('message', 'S');
 	});
+	$('#obstacle_detect').click(function () {
+	    sockets.emit('message', $("#options_detect").val() +' '+ $("#capt_detect").val() + ' '+$("#angle_res").val());
+	});
 	$('#mesure_d').click(function () {
 	    sockets.emit('message', 'Mesure la distance');
 	});
@@ -230,6 +248,12 @@
 	});
 </script>
 
+<!-- Section indicateurs -->
+	<div class="indicateurs" id="indicateurs">
+		<h2>Messages du robot</h2>
+		<p> Consomation : </p>
+	</div>
+
 
 <!-- Section cartographie -->
 	<div class="cartographie" id="cartographie">
@@ -241,13 +265,6 @@
 				<img src="carte.jpg" alt= "la carte du terrain"/>
 			</fieldset>
 		</div>
-	</div>
-
-
-<!-- Section indicateurs -->
-	<div class="indicateurs" id="indicateurs">
-		<h2>Indicateurs</h2>
-		<p> Consomation </p>
 	</div>
 
 </body>

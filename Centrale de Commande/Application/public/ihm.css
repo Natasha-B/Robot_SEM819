@@ -1,3 +1,14 @@
+/*------------------------ -----------------------------------------------------------
+ Projet_Transversal - ihm.css
+------------------------------------------------------------------------------------
+
+ DEVELOPPEUR: BRU Natacha
+
+ Groupe: B2
+
+------------------------------------------------------------------------------------*/
+
+
 /*style du Header */
 .header{
 	background: url("imagebandeau.jpg");
@@ -32,7 +43,7 @@ nav {
 
 .button {
   background-color: #4CAF50;
-  display: inline-block;
+  display: block;
   position: relative;
   margin: auto;
   margin:2% 2% 2% 6%;
@@ -94,47 +105,6 @@ nav {
 }
 
 
-/*style de l'introduction */
-.introduction{
-	height: auto;
-	width: 100%;
-	background-color: white;
-}
-
-.introductionTexte{
-	display: inline-block;
-	font-family : 'Didot', sans-serif ;
-	font-style: italic;
-	color: #CB9951;
-	width: 48%;
-	background-color: white;
-	text-align: center;
-	height: auto;
-	margin-top: 1%;
-	font-size: 110%;
-	margin :1%;
-	vertical-align: middle;
-}
-
-.imageIntro{
-	display: inline-block;
-	width: 48%;
-	height: auto;
-	margin-top: 1%;
-	margin:1%;
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-	vertical-align: middle;
-}
-
-
-.titre{
-	color: black;
-	font-style:normal;
-	letter-spacing: 2px;
-	font-family: 'Didot', serif;
-	text-align: center;
-}
-
 /*style des divisions de contrôles*/
 
 .deplacements{
@@ -148,10 +118,21 @@ nav {
 	vertical-align: middle;
 }
 
+
+.deplacements1{
+	display: inline-block;
+	position: static;
+	width: 40%;
+	height: auto;
+	margin-top: 1%;
+	margin:1%;
+	vertical-align: middle;
+}
+
 .epreuve{
 	display: inline-block;
 	width: 48%;
-	height: auto;
+	height: 250px;
 	margin-top: 1%;
 	margin:1%;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -173,7 +154,7 @@ nav {
 .servomoteurs{
 	display: inline-block;
 	width: 48%;
-	height: auto;
+	height: 250px;
 	margin-top: 1%;
 	margin:1%;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -184,7 +165,18 @@ nav {
 .mesure{
 	display: inline-block;
 	width: 48%;
-	height: auto;
+	height: 300px;
+	margin-top: 1%;
+	margin:1%;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	vertical-align: middle;
+	position:relative;
+}
+
+.detection_obstacles{
+	display: inline-block;
+	width: 48%;
+	height: 300px;
 	margin-top: 1%;
 	margin:1%;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -195,7 +187,7 @@ nav {
 .son{
 	display: inline-block;
 	width: 48%;
-	height: auto;
+	height: 500px;
 	margin-top: 1%;
 	margin:1%;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -207,7 +199,7 @@ nav {
 .images{
 	display: inline-block;
 	width: 48%;
-	height: auto;
+	height: 500px;
 	margin-top: 1%;
 	margin:1%;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -266,12 +258,12 @@ h4 a{
 }
 
 h4{
-	display : block;
+	display : inline-block;
 	color: black;
 	font-style: normal;
 	letter-spacing: 2px;
 	font-family: 'Baskerville', sans-serif;
-	text-align: left;
+	text-align: justify;
 }
 
 body{
@@ -280,6 +272,7 @@ body{
 }
 
 p{
+	text-align: center;
 	text-indent: 2em;
 }
 
@@ -306,9 +299,9 @@ label{
 	display: inline-block;
 	color: black;
 	font-style: normal;
-	letter-spacing: 2px;
+	letter-spacing: 1px;
 	font-family: 'Baskerville', sans-serif;
-	text-align: left;
+	text-align: center;
 }
 
 form {
