@@ -60,7 +60,8 @@
 #include <string.h>
 #include <intrins.h>
 #include "servomoteur.h"
-
+#include "telemetre_ultrason.h"
+#include <math.h>
 
 
 #ifndef CFG_Globale
@@ -320,6 +321,18 @@ void putChar1(char carac){
 		putChar1('\r');
 	}
 	
+	void avanceD(char* distance1, char* distance2, char* vitesse){
+		putString1("digo 1:");
+		putString1(distance1);
+		putString1(":");
+		putString1(vitesse);
+		putString1(" 2:");
+		putString1(distance2);
+		putString1(":");
+		putString1(vitesse);
+		putChar1('\r');
+	}
+	
 	
 	void recule(char* vitesse){
 		putString1("mogo 1:-");
@@ -329,18 +342,32 @@ void putChar1(char carac){
 		putChar1('\r');
 	}
 	
-
+	void mon_itoa(int chiffre,char* distance_obs){
+		int i;
+		int a=100;
+		for (i=0;i<3;i++){
+			distance_obs[i]=floor(chiffre/a);
+			chiffre = chiffre - distance_obs[i]*a;
+			a = a/10;
+		}
+	}
 	
+
+
 	
 	
 	void transfert (char* stock) {
 	char vitesse2[3]="";
 	char angle[3]="";
+	char distance1[3]="";
+	char distance2[3]="";
 	int i=0;
 	int n=0;
 	int j = 0;
 	int machin = 0;
 	int position_servo = 1;
+	char distance_obs[3]="";
+	int d;
 	if(stock[0]=='D'){			// Début Epreuve
 		serOutstring("******Epreuve 1******");
 		epreuve=1;
@@ -356,7 +383,7 @@ void putChar1(char carac){
 				for (i=3;i<=strlen(stock);i++){
 					vitesse[i-3]=stock[i];
 					}
-				if ((strlen(vitesse)==3)&&(((vitesse[0]==1)&&(vitesse[1]>0)&&(vitesse[2]>0))||vitesse[0]>1)){
+				if ((strlen(vitesse)==3)&&(atoi(vitesse)>100)){
 					serOutchar('#');
 					vitesse[0]='2';
 					vitesse[1]='0';
@@ -427,6 +454,46 @@ void putChar1(char carac){
 					putString1("digo 1:500:-20 2:500:20\r");
 					}
 				}
+			/*	
+			else if(stock[0]='G'){
+				j=0;
+				//distance1
+				while (stock[j]!=':'){
+					j++;
+				}
+				j++;
+				n=0;
+				while (stock[j]!=' '){
+					distance1[n]=stock[j];
+					j++;
+					n++;
+				}
+				//distance2
+				while (stock[j]!=':'){
+					j++;
+				}
+				j++;
+				n=0;
+				while (stock[j]!=' '){
+					distance2[n]=stock[j];
+					j++;
+					n++;
+				}
+				
+				while (stock[j]!=':'){
+					j++;
+				}
+				j++;
+				n=0;
+				while (stock[j]!=' '){
+					angle[n]=stock[j];
+					j++;
+					n++;
+				}
+
+
+
+			}	*/
 			
 			//servomoteur
 			else if((stock[1]=='S')&&(stock[0]='C')&&(stock[2]==' ')&&(stock[3]='H')&&(stock[4]==' ')&&(stock[5]='A')&&(stock[6]=':')){
@@ -449,6 +516,18 @@ void putChar1(char carac){
 					serOutchar('#');
 				}
 			}
+			else if ((stock[0] == "M")&&(stock[1] == "O") && (stock[2] == "U")){
+				d = (int)(calc_dist());
+		
+				mon_itoa(d,distance_obs);
+				strcpy(angle,"XX");
+				if ((d<10) || (d>105)){	//Pas d'obstacles
+					serOutstring(strcat(angle,": 0"));
+				} else {	//Obstacle detecte
+					serOutstring(strcat(strcat(angle,":"),distance_obs));
+				}
+		}
+			
 			
 			else{
 				serOutchar('#');

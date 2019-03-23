@@ -22,10 +22,10 @@ unsigned int cp;
 
 
  // Servomoteur HS-422: +
-sbit Cde_Servo = P1^0; 
-float t_pos_min = 0.5;  // Dur?e de l'impulsion en ms pour -90? 
-float t_pos_max = 2.4;  // Dur?e de l'impulsion en ms pour 90? 
-float alpha;  // Dur?e d'impulsion par d?gr? d'angle 
+sbit Cde_Servo = P1^2; 
+xdata float t_pos_min = 0.5;  // Dur?e de l'impulsion en ms pour -90? 
+xdata float t_pos_max = 2.4;  // Dur?e de l'impulsion en ms pour 90? 
+xdata float alpha;  // Dur?e d'impulsion par d?gr? d'angle 
 
  void delay(int j){ 
  	unsigned int n, cp; 
@@ -65,7 +65,7 @@ void cfg_timer4(){
 		EIE2 |= 0x04;
 
 // Timer configur? sur l'horloge du system: 
- 	CKCON = 0x40; 
+ 	CKCON |= 0x40; 
  } 
 
 
@@ -77,10 +77,10 @@ void cfg_timer4(){
  */ 
  void cfg_servo(){ 
 // Initialisation de la sortie ? 0: 
- 	Cde_Servo = 0; 
+ 	Cde_Servo = 1; 
 
 // Active la sortie en push-pull: 
- 	P1MDOUT |= 1; 
+ 	 
 
 // Dur?e d'impulsion par d?gr? d'angle: 
  alpha = (t_pos_max - t_pos_min) / 180;  	 	 
@@ -148,7 +148,7 @@ void cfg_crossbar(){
 
  	// Envoie la commande plusieurs fois au servomoteur: 
  	int i,j,k;
- 	for(i = 0; i < 1000; i++) { 
+ 	for(i = 0; i < 500; i++) { 
 		// Initialisation du Timer 4 ? la valeur souhait?e: 
  		TH4_TL4 = timer_load; 
 
@@ -168,6 +168,7 @@ void cfg_crossbar(){
  		// Attente suppl?mentaire: 
 		for(j=0; j<0xFF; j++) for(k=0; k<0x15; k++) ; 
  	} 
+	Cde_Servo = 1;
  } 
 
 void config_servo(){
