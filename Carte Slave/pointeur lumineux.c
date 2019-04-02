@@ -11,10 +11,11 @@
 //
 //------------------------------------------------------------------------------------
 #include "c8051F020.h"
+#include "pointeur.h"
 
 
 // UART
-char UART_buff [50];
+char UART_buff;
 char UART_busy = 0;
 
 
@@ -68,7 +69,8 @@ void cfg_timer2 (void) {
 	TCLK0 = 1;
 	CPRL2 = 0;
 	CKCON |= 0x20;
-	RCAP2 = 0xFFB8; // 9600b
+	RCAP2L = 0xB8; // 9600b
+	RCAP2H = 0xFF;
 	
 	// Interruptions
 	ES0 = 1;
@@ -114,10 +116,9 @@ void cfg_interrupt (void) {
 void cfg_PWM(void){
 	PCA0CN |= 0x00;
 	PCA0MD |= 0x09;
-	PCA0CPM0 |= 0x42;
-	PCA0CPH0 = 0x00; // initialisé à 0
+	PCA0CPM0 |= 0xc3;
 	XBR0 |= 0x08;
-	P2MDOUT |= 0x01;
+	P0MDOUT |= 0xff;
 }
 
 
@@ -234,15 +235,18 @@ void UART_receive (void) {
 		return;
 
 
-/*	
 	switch (UART_buff) {
-		// Mode automatique
-		case 'UART_buff[0] == A':
-			start_blink_led(UART_buff[1], UART_buff[2], UART_buff[3], UART_buff[4]);
+		case 'C':
+			UART_sends('C');
+			start_blink_led(3,3,5,25);
 			break;
 		
-		case 'UART_buff[0] == E' : 
-			stop_blink_led();
+		case 'E': 
+			led_off();
+			break;
+		
+		case 'A':
+			led_on();
 			break;
 		
 		default:
@@ -250,7 +254,7 @@ void UART_receive (void) {
 			break;
 	}
 			
-	UART_sends(invalid_cmd ? "Invalid command !" : "OK");*/
+	UART_sends(invalid_cmd ? "Invalid command !" : "OK");
 	UART_sendCRLF();
 	UART_buff = 0x00;
 }
@@ -276,7 +280,7 @@ void UART() interrupt 4 {
 }
 
 void pointer_interrupt() interrupt 9{
-	PCA0CN &= 0x7F;
+	PCA0CN &= 0x7E;
 } 
 
 
@@ -303,20 +307,25 @@ void Welcome() {
  * Active le clignotement de la LED:
  * @return void
  */
+int p;
 void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
-	for (int p = 0; p < n_period; p++){
-		float intensite = (-(((float)intensity * 2.56f)-256.0f));
-		int pca = (int) intensite
-		PCA0CPH0 = pca;
+	for (p = 0; p < n_period; p++){
+		float intensite = (-(((float)intensity * 655.36f)-65536.0f));
+		unsigned int pca = (int) intensite;
+		int pca1 = (pca/256);
+		int pca2 = (pca%256);
+		PCA0CPL0 = pca2;
+		PCA0CPH0 = pca1;
 		PCA0CN |= 0x40;
 		delay(t_up * 1000);
-		PCA0CN |= 0x00;
+		PCA0CN = 0x00;
 		delay (t_down * 1000);
 	}
 }
 
 void led_on (void){
-	PCA0CPH0 = 0x00;
+	PCA0CPL0 = 0x00;
+	PCA0CPH0 = 0x70;
 	PCA0CN |= 0x40;
 }
 
@@ -326,6 +335,7 @@ void led_on (void){
  * @return void
  */
 void led_off() {
+	PCA0CPL0 = 0xFF;
 	PCA0CPH0 = 0xFF;
 	PCA0CN |= 0x40;
 	
@@ -337,12 +347,10 @@ void led_off() {
 //------------------------------------------------------------------------------------
 
 int main() {
+	WDTCN = 0xDE;
+	WDTCN = 0xAD;
 	init();
 	Welcome();
-	start_blink_led(3,3,5,50);
-	led_on();
-	delay(5000);
-	led_off();
 	while(1){
 		UART_receive();
 	};
