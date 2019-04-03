@@ -76,6 +76,7 @@
 #define       MAX_BUFLEN 32 // Taille des buffers de données
 xdata char vitesse[3]="20";
 xdata int epreuve=0;
+xdata char angleMem[3]="000";
 
 //*************************************************************************************************
 // DEFINITION DES MACROS DE GESTION DE BUFFER CIRCULAIRE
@@ -298,7 +299,6 @@ void cfg_UART1_mode1(void)
 	
     //EIE2 |= 0x40;        // interruption UART0 autorisée	ES1=1
 }
-
 void putChar1(char carac){
 	SBUF1=carac;
 	while((SCON1|0xFD)==0xFD){
@@ -306,12 +306,54 @@ void putChar1(char carac){
 	SCON1 &= 0xFD;
 	}
 	
-	void putString1(char chaine[32]){
-		int i;
+void putString1(char chaine[32]){
+		xdata int i;
 		for (i=0;i<strlen(chaine);i++){
 			putChar1(chaine[i]);
 		}
 	}
+	
+char getChar1(){
+	char reception=' ';
+	while((SCON1|0xFE)==0xFE){
+		}
+	reception = SBUF1;
+	SCON1 &= 0xFE;
+	serOutchar(reception);
+	return reception;
+	}
+	
+	
+void Commande_effectuee(char c){
+	while(getChar1()!=c){
+	}
+}
+	void mon_itoa(int chiffre,char* distance_obs){
+		xdata int i;
+		xdata int a=100;
+		for (i=0;i<3;i++){
+			distance_obs[i]=0x30+floor(chiffre/a);
+			chiffre = chiffre - (distance_obs[i]-0x30)*a;
+			a = a/10;
+		}
+	}
+		void mon_itoaD(int chiffre,char* distance_obs){
+		xdata int i=0;
+		xdata int n=0;
+		xdata int a=1000;
+		if (chiffre<0){
+			chiffre=chiffre*(-1);
+			distance_obs[0]='-';
+			i++;
+		}
+		n=i+3;
+		for (i;i<=n;i++){
+			distance_obs[i]=0x30+floor(chiffre/a);
+			chiffre = chiffre - (distance_obs[i]-0x30)*a;
+			a = a/10;
+		}
+	}
+	
 	
 	void avance(char* vitesse){
 		putString1("mogo 1:");
@@ -321,17 +363,92 @@ void putChar1(char carac){
 		putChar1('\r');
 	}
 	
-	void avanceD(char* distance1, char* distance2, char* vitesse){
+	void calcDistanceX(char* distanceX){
+		xdata int dist1=0;
+		dist1=atoi(distanceX);
+		dist1=(1.67)*334*dist1/1.76;
+		mon_itoaD(dist1,distanceX);
+		
+	}
+	
+	void calcDistanceY(char* distanceY){
+		xdata int dist1=0;
+		dist1=atoi(distanceY);
+		dist1=(1.67)*334*dist1/1.76;
+		mon_itoaD(dist1,distanceY);
+	}
+	
+	void rotationG(int angle){
+		xdata char dist[4];
+		angle=angle*5.4;
+		mon_itoaD(angle,dist);
 		putString1("digo 1:");
-		putString1(distance1);
-		putString1(":");
-		putString1(vitesse);
-		putString1(" 2:");
-		putString1(distance2);
-		putString1(":");
-		putString1(vitesse);
+		putString1(dist);
+		putString1(":10 2:-");
+		putString1(dist);
+		putString1(":10");
 		putChar1('\r');
 	}
+		
+	void rotationD(int angle){
+		xdata char dist[4];
+		angle=angle*5.4;
+		mon_itoaD(angle,dist);
+		putString1("digo 1:-");
+		putString1(dist);
+		putString1(":10 2:");
+		putString1(dist);
+		putString1(":10");
+		putChar1('\r');
+	}
+	
+	void avanceX(char* distanceX){
+		if (distanceX[0]=='-'){
+			rotationG(90);
+		}
+		else{
+			rotationD(90);
+		}
+		Commande_effectuee('>');
+
+		//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
+		putString1("digo 1:");
+		putString1(distanceX);
+		putString1(":20");
+		putString1(" 2:");
+		putString1(distanceX);
+		putString1(":20");
+		putChar1('\r');
+	}
+	
+	void avanceY(char* distanceY,char* distanceX){
+		if (distanceX[0]=='-'){
+			if (distanceY[0]=='-'){
+				rotationG(90);
+			} 
+			else{
+				rotationD(90);
+			}
+		}
+		else{
+			if (distanceY[0]=='-'){
+				rotationD(90);
+			} 
+			else{
+				rotationG(90);
+			}
+		}
+	  Commande_effectuee('>');
+		//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
+		putString1("digo 1:");
+		putString1(distanceY);
+		putString1(":20");
+		putString1(" 2:");
+		putString1(distanceY);
+		putString1(":20");
+		putChar1('\r');
+	}
+		
 	
 	
 	void recule(char* vitesse){
@@ -342,32 +459,26 @@ void putChar1(char carac){
 		putChar1('\r');
 	}
 	
-	void mon_itoa(int chiffre,char* distance_obs){
-		int i;
-		int a=100;
-		for (i=0;i<3;i++){
-			distance_obs[i]=floor(chiffre/a);
-			chiffre = chiffre - distance_obs[i]*a;
-			a = a/10;
-		}
-	}
 	
-
-
+	
+	
 	
 	
 	void transfert (char* stock) {
-	char vitesse2[3]="";
-	char angle[3]="";
-	char distance1[3]="";
-	char distance2[3]="";
-	int i=0;
-	int n=0;
-	int j = 0;
-	int machin = 0;
-	int position_servo = 1;
-	char distance_obs[3]="";
-	int d;
+	xdata char vitesse2[3]="";
+	xdata char angle[3]="";
+	xdata char angleRobot[3]="";
+	xdata int angleRob=0;
+	xdata char distanceX[6]="";
+	xdata char distanceY[6]="";
+	xdata int i=0;
+	xdata int n=0;
+	xdata int j = 0;
+	xdata int machin = 0;
+	xdata int position_servo = 1;
+	xdata char distance_obs[3]="";
+	xdata int d=0;
+		
 	if(stock[0]=='D'){			// Début Epreuve
 		serOutstring("******Epreuve 1******");
 		epreuve=1;
@@ -397,17 +508,13 @@ void putChar1(char carac){
 
 			else if(stock[0]=='A'){			// Avancer	
 				if (strlen(stock)==1){
-					//serOutstring("coucou");
 					avance(vitesse);
-					//putString1("mo");
-					//serOutstring(vitesse);
 					}
 				else{
 					for (i = 2;i<strlen(stock);i++){
 							vitesse2[i-2]=stock[i];
 						}
 					avance(vitesse2);
-					serOutstring(vitesse2);
 					}
 				
 				}
@@ -415,14 +522,12 @@ void putChar1(char carac){
 			else if(stock[0]=='B'){																	// Reculer
 				if (strlen(stock)==1){
 					recule(vitesse);
-					serOutstring(vitesse);
 					}
 				else{
 					for (i = 2;i<strlen(stock);i++){
 							vitesse2[i-2]=stock[i];		
 					}
 					recule(vitesse2);
-					serOutstring(vitesse2);
 					}
 				
 				}
@@ -432,81 +537,105 @@ void putChar1(char carac){
 				serOutstring("stop");
 			}
 			
-			else if((stock[1]=='D')&&(stock[0]='R')){			// Rotation Droite 90°
-				putString1("digo 1:1000:-20 2:1000:20\r");
-				}
+			else if((stock[1]=='D')&&(stock[0]='R')){			// 
+				rotationD(90);															//Rotation Droite 90°
+				}																						//
 			
-			else if((stock[1]=='G')&&(stock[0]='R')){								// Rotation Gauche 90°
-				putString1("digo 1:1000:20 2:1000:-20\r");
-				}
+			else if((stock[1]=='G')&&(stock[0]='R')){								// 
+				rotationG(90);																				//Rotation Gauche 90°
+				}																											//
 			
-			else if((stock[1]=='C')&&(stock[0]='R')){								// Rotation Complete 180°
-				if (stock[3]=='D'){
-					putString1("digo 1:2050:-20 2:2050:20\r");
-					serOutstring("ok");
+			else if((stock[1]=='C')&&(stock[0]='R')){								// 
+				if (stock[3]=='D'){																		//Rotation Complete 180°
+					rotationD(180);																			//
 					}
 				else if(stock[3]=='G'){
-					putString1("digo 1:2050:20 2:2050:-20\r");
+					rotationG(180);
 					}
 				}
 			else if((stock[1]=='A')&&(stock[0]='R')){								// Rotation 45°
 				if ((stock[3]=='G')&&(stock[4]==':')&&(stock[5]=='4')&&(stock[6]=='5')){
-					putString1("digo 1:500:-20 2:500:20\r");
+					rotationG(45);
+					}
+				else if ((stock[3]=='D')&&(stock[4]==':')&&(stock[5]=='4')&&(stock[6]=='5')){
+					rotationD(45);
 					}
 				}
-			/*	
-			else if(stock[0]='G'){
-				j=0;
-				//distance1
-				while (stock[j]!=':'){
-					j++;
-				}
-				j++;
-				n=0;
-				while (stock[j]!=' '){
-					distance1[n]=stock[j];
-					j++;
-					n++;
-				}
-				//distance2
-				while (stock[j]!=':'){
-					j++;
-				}
-				j++;
-				n=0;
-				while (stock[j]!=' '){
-					distance2[n]=stock[j];
-					j++;
-					n++;
-				}
+			
 				
+			// Avancer jusqu'a un point
+			else if(stock[0]=='G'){
+				j=0;
+				//distanceX
 				while (stock[j]!=':'){
 					j++;
 				}
 				j++;
 				n=0;
 				while (stock[j]!=' '){
-					angle[n]=stock[j];
+					distanceX[n]=stock[j];
 					j++;
 					n++;
 				}
+				//distanceY
+				while (stock[j]!=':'){
+					j++;
+				}
+				j++;
+				n=0;
+				while (stock[j]!=' '){
+					distanceY[n]=stock[j];
+					j++;
+					n++;
+				}
+				//Angle
+				while (stock[j]!=':'){
+					j++;
+				}
+				j++;
+				n=0;
+				while (j<strlen(stock)){
+					angleRobot[n]=stock[j];
+					j++;
+					n++;
+				}
+				calcDistanceX(distanceX);
+				calcDistanceY(distanceY);				
+				avanceX(distanceX);
+        Commande_effectuee('>');
+				
+				//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
+				avanceY(distanceY,distanceX);
+				Commande_effectuee('>');
 
+				//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
+				if (distanceY[0]=='-'){
+					rotationG(180);
+				}
+				angleRob=atoi(angleRobot);
+			  Commande_effectuee('>');
 
-
-			}	*/
+				//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
+				if (angleRob>0){
+					rotationG(angleRob);
+				}
+				else{
+					angleRob=abs(angleRob);
+					rotationD(angleRob);
+				}
+			serOutstring("\r\nB");
+			}	
+			
 			
 			//servomoteur
 			else if((stock[1]=='S')&&(stock[0]='C')&&(stock[2]==' ')&&(stock[3]='H')&&(stock[4]==' ')&&(stock[5]='A')&&(stock[6]=':')){
+				
 				for (i=7;i<=strlen(stock);i++){
 					angle[i-7]=stock[i];
 				}
-//				j=0;
-//				if (angle[j] == '-'){
-//						position_servo *= -1;
-//						j++;
-//				}
-//				else{
-//				}
+				if (stock[3]=='H'){
+					strcpy(angleMem,angle);
+				}
 				machin = atoi(angle);
 				if (((machin)>= -90)&&(machin<=90)){
 					position_servo *= machin;
@@ -516,11 +645,12 @@ void putChar1(char carac){
 					serOutchar('#');
 				}
 			}
-			else if ((stock[0] == "M")&&(stock[1] == "O") && (stock[2] == "U")){
+			
+			else if ((stock[0] == 'M')&&(stock[1] == 'O') && (stock[2] == 'U')){
 				d = (int)(calc_dist());
 		
 				mon_itoa(d,distance_obs);
-				strcpy(angle,"XX");
+				strcpy(angle,angleMem);
 				if ((d<10) || (d>105)){	//Pas d'obstacles
 					serOutstring(strcat(angle,": 0"));
 				} else {	//Obstacle detecte
@@ -538,39 +668,7 @@ void putChar1(char carac){
 		}
 	}
 	serOutstring("\n\r");
-	/*else if(stock[1]=='A')&(stock[0]='R'){						// Rotation angle donné
-		if (stock[3]=='D'){
-			if (strlen(stock)>5){
-				AngleRotation='';
-				for (i=5;i<strlen(stock);i++){
-					AngleRotation=strcat(AngleRotation,stock[i]);			// angle en degres
-					}
-				L = 3.14*r*atoi(AngleRotation)/180;						// Longueur en cm
-				L = L/5.24;																		// Longueur en inch
-				L = L/0.020;																	// Longueur en ticks
-				distance = itos(L);
-				envoie = strcat(strcat(strcat(strcat("digo 1:",distance),":20 2:"),distance),":-20\r");
-				}
-			else{
-				envoie = "digo 1:346:20 2:346:-20\r";
-				}
-		else{
-				if (strlen(stock)>5){
-				AngleRotation='';
-				for (i=5;i<strlen(stock);i++){
-					AngleRotation=strcat(AngleRotation,stock[i]);			// angle en degres
-					}
-				L = 3.14*r*atoi(AngleRotation)/180;						// Longueur en cm
-				L = L/5.24;																		// Longueur en inch
-				L = L/0.020;																	// Longueur en ticks
-				distance = itos(L);
-				envoie = strcat(strcat(strcat(strcat("digo 1:",distance),":-20 2:"),distance),":20\r");
-				}
-			else{
-				envoie = "digo 1:346:-20 2:346:20\r";
-				}
-			}
-		}	*/
+	
 
 }
 	
