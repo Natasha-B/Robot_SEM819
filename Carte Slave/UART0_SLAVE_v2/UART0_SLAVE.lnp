@@ -1,0 +1,4 @@
+"STARTUP.obj",
+"main.obj" 
+TO "UART0_SLAVE" 
+RAMSIZE(256) 
