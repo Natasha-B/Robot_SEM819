@@ -102,6 +102,7 @@
 		   		<p><label>angle </label> : <input type="number" id ="coord_angle" min= -180 max = 180 name="coord_angle" value= 0 required /></p>
 		    </form><!--
 		--><input type="submit" class="button" id="coord_def" value="Se rendre à ces corrdonnées" /><!--
+		--><input type="submit" class="button" id="coord_init" value="Initialisation à ces corrdonnées" /><!--
 		--></div>
 		</div><!--
 
@@ -225,9 +226,12 @@
 	$('#rotation').click(function () {
 	    sockets.emit('message', 'RA '+ $("#sens").val() + ':' + $("#A").val());
 	});
-	$('#coord_angle').click(function () {
+	$('#coord_def').click(function () {
 	    sockets.emit('message', 'G X:'+ $("#coord_x").val() + ' Y:' + $("#coord_y").val()+ ' A:' + $("#coord_angle").val());
 	});
+	$('#coord_init').click(function () {
+	    sockets.emit('message', 'IPO X:'+ $("#coord_x").val() + ' Y:' + $("#coord_y").val()+ ' A:' + $("#coord_angle").val());
+	 });
 	$('#stop').click(function () {
 	    sockets.emit('message', 'S');
 	});
