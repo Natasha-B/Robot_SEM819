@@ -1,0 +1,46 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+C:\CPE_USERS\PROJET TRANSVERSAL\Application globale\carteSlave.uvproj
+Project File Date:  04/09/2019
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+assembling STARTUP.A51...
+compiling pointeur lumineux.c...
+compiling slave_main.c...
+compiling SPI0.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_START_BLINK_LED?POINTEUR_LUMINEUX
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?LED_ON?POINTEUR_LUMINEUX
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?LED_OFF?POINTEUR_LUMINEUX
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  OSCILLATOR_INIT
+    MODULE:  slave_main.obj (SLAVE_MAIN)
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  CFG_CLOCK_UART
+    MODULE:  slave_main.obj (SLAVE_MAIN)
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  CFG_UART0_MODE1
+    MODULE:  slave_main.obj (SLAVE_MAIN)
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  OSCILLATOR_INIT
+    MODULE:  slave_main.obj (SLAVE_MAIN)
+    ADDRESS: 03C9H
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  CFG_CLOCK_UART
+    MODULE:  slave_main.obj (SLAVE_MAIN)
+    ADDRESS: 03CCH
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  CFG_UART0_MODE1
+    MODULE:  slave_main.obj (SLAVE_MAIN)
+    ADDRESS: 03CFH
+Program Size: data=30.0 xdata=0 code=1044
+"carteSlave" - 0 Error(s), 9 Warning(s).
+Clean started: Project: 'carteSlave'
+   deleting intermediate output files for target 'Target 1'
