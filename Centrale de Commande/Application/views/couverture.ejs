@@ -109,7 +109,6 @@
 
 	 --><div class = "mesure" id = "mesure">
 			<h3> Activation des capteurs de mesure </h3>
-			<button class="button" type="button" value="commande" id="mesure_d" />Mesure de distance</button>
 			<button class="button" type="button" value="commande" id="mesure_c" />Mesure de courant</button>
 			<button class="button" type="button" value="commande" id="mesure_e" />Mesure d'énergie</button>
 		</div><!--
@@ -194,76 +193,73 @@
 	});
 
 	$('#arret').click(function () {
-	    sockets.emit('message', 'Q');
+	    sockets.emit('message', 'Q\r');
 	});
 	$('#debut').click(function () {
-	    sockets.emit('message', 'D'+ $("#E").val());
+	    sockets.emit('message', 'D'+ $("#E").val() + '\r');
 	});
 	$('#fin').click(function () {
-	    sockets.emit('message', 'E');
+	    sockets.emit('message', 'E\r');
 	});
 	$('#Vit_def').click(function () {
-	    sockets.emit('message', 'TV ' + $("#V").val());
+	    sockets.emit('message', 'TV ' + $("#V").val() + '\r');
 	});
 	$('#rotation_servo').click(function () {
-	    sockets.emit('message', 'CS ' + $("#servo").val() + $("#A_servo").val());
+	    sockets.emit('message', 'CS ' + $("#servo").val() + ' A:' +$("#A_servo").val() + '\r');
 	});
 	$('#avance').click(function () {
-	    sockets.emit('message', 'A ' + $("#V").val());
+	    sockets.emit('message', 'A ' + $("#V").val() + '\r'); 
 	});
 	$('#recule').click(function () {
-	    sockets.emit('message', 'B ' + $("#V").val());
+	    sockets.emit('message', 'B ' + $("#V").val() + '\r');
 	});
 	$('#tourne_d').click(function () {
-	    sockets.emit('message', 'RD');
+	    sockets.emit('message', 'RD\r');
 	});
 	$('#tourne_g').click(function () {
-	    sockets.emit('message', 'RG');
+	    sockets.emit('message', 'RG\r');
 	});
 	$('#demiTour').click(function () {
-	    sockets.emit('message', 'RC '+ $("#sens").val());
+	    sockets.emit('message', 'RC '+ $("#sens").val() + '\r');
 	});
 	$('#rotation').click(function () {
-	    sockets.emit('message', 'RA '+ $("#sens").val() + ':' + $("#A").val());
+	    sockets.emit('message', 'RA '+ $("#sens").val() + ':' + $("#A").val()+ '\r');
 	});
 	$('#coord_def').click(function () {
-	    sockets.emit('message', 'G X:'+ $("#coord_x").val() + ' Y:' + $("#coord_y").val()+ ' A:' + $("#coord_angle").val());
+	    sockets.emit('message', 'G X:'+ $("#coord_x").val() + ' Y:' + $("#coord_y").val()+ ' A:' + $("#coord_angle").val() + '\r');
 	});
 	$('#coord_init').click(function () {
-	    sockets.emit('message', 'IPO X:'+ $("#coord_x").val() + ' Y:' + $("#coord_y").val()+ ' A:' + $("#coord_angle").val());
+	    sockets.emit('message', 'IPO X:'+ $("#coord_x").val() + ' Y:' + $("#coord_y").val()+ ' A:' + $("#coord_angle").val() + '\r');
 	 });
 	$('#stop').click(function () {
-	    sockets.emit('message', 'S');
+	    sockets.emit('message', 'S\r');
 	});
 	$('#obstacle_detect').click(function () {
-	    sockets.emit('message', $("#options_detect").val() +' '+ $("#capt_detect").val() + ' '+$("#angle_res").val());
-	});
-	$('#mesure_d').click(function () {
-	    sockets.emit('message', 'Mesure la distance');
+	    sockets.emit('message', $("#options_detect").val() +' '+ $("#capt_detect").val() + ' '+$("#angle_res").val() + '\r');
 	});
 	$('#mesure_c').click(function () {
-	    sockets.emit('message', 'MI');
+	    sockets.emit('message', 'MI\r');
 	});
 	$('#mesure_e').click(function () {
-	    sockets.emit('message', 'ME');
+	    sockets.emit('message', 'ME\r');
 	});
 	$('#emission').click(function () {
-	    sockets.emit('message', 'SD F:' + $("#F").val() + ' P:' +(($("#D_e").val())*10) + ' W:' +(($("#D_s").val())*10) + ' B:' +$("#N_b").val());
+	    sockets.emit('message', 'SD F:' + $("#F").val() + ' P:' +(($("#D_e").val())*10) + ' W:' +(($("#D_s").val())*10) + ' B:' +$("#N_b").val() + '\r');
 	});
 	$('#reception').click(function () {
-	    sockets.emit('message', 'ASS '+ (($("#D_a").val())/10));
+	    sockets.emit('message', 'ASS '+ (($("#D_a").val())/10) + '\r');
 	});
 	$('#image').click(function () {
-	    sockets.emit('message', 'PPH '+ $("#options_img").val() + ' E:'+(($("#D_cliches").val())/10) + ' N:'+ $("#N_cliches").val());
+	    sockets.emit('message', 'PPH '+ $("#options_img").val() + ' E:'+(($("#D_cliches").val())/10) + ' N:'+ $("#N_cliches").val() + '\r');
 	});
 	$('#image_f').click(function () {
-	    sockets.emit('message', 'SPH');
+	    sockets.emit('message', 'SPH\r');
 	});
 	$('#active_p').click(function () {
-	    sockets.emit('message', 'L I:' + $("#I").val() + ' D:' +(($("#D1").val())/10) + ' E:' +(($("#D2").val())/10) + ' N:' +$("#N").val());
+	    sockets.emit('message', 'L I:' + $("#I").val() + ' D:' +(($("#D1").val())/10) + ' E:' +(($("#D2").val())/10) + ' N:' +$("#N").val() + '\r');
 	});
 	$('#desactive_p').click(function () {
-	    sockets.emit('message', 'LS');
+	    sockets.emit('message', 'LS\r');
 	});
 </script>
 
