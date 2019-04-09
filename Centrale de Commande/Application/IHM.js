@@ -66,8 +66,7 @@ io.sockets.on('connection', function (socket) {
         port.write( message, function(err) {
           if (err) {
             return console.log('Error on write: ', err.message);
-	  	    }
-        }){
+        });
           console.log('message envoyé au robot : ', message);
         };
     });
