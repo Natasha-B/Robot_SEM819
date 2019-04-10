@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stdlib.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -48,15 +49,48 @@ DAC_HandleTypeDef hdac;
 
 I2C_HandleTypeDef hi2c1;
 
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
+
+UART_HandleTypeDef huart4;
 
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
+// ADC1 et DAC1
 __IO uint16_t sig = 0;
-__IO uint32_t timeout = 0;
-__IO uint16_t somme10 = 0; 
+__IO uint32_t timeout = 10;
+__IO uint16_t somme100 = 0;
 int i = 0;
+//Seuil pour la détection
+int seuil = 0x8000;
+//Le 1,5 envoyer par le conditionnement
+int centre = 0x7FF;
+
+// UART4
+uint8_t h4RX;
+__IO uint16_t size=1;
+int cpt_uart =0;
+char stock[32] = "";
+
+
+// DAC2
+int cpt_sin = 0;
+int freq = 440;
+char freq_c[4];
+int tps_son = 500;
+char tps_son_c[5];
+int tps_silence = 200;
+char tps_silence_c[5];
+int cpt_split;
+int deb = 0;
+int sinus[10] = {2078,3251,3995,3995,3251,2048,844,100,100,844};
+int cpt_t4 = 0;
+int allume = 1;
+
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,6 +101,9 @@ static void MX_I2C1_Init(void);
 static void MX_USB_PCD_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_UART4_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -109,9 +146,26 @@ int main(void)
   MX_USB_PCD_Init();
   MX_ADC2_Init();
   MX_TIM3_Init();
+  MX_UART4_Init();
+  MX_TIM2_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+	
+	htim2.Instance->PSC = 480000/(freq);
+	
 	HAL_TIM_Base_Start(&htim3);
 	HAL_TIM_Base_Start_IT(&htim3);
+	
+	/*
+	HAL_TIM_Base_Start(&htim2);
+	HAL_TIM_Base_Start_IT(&htim2);
+
+	HAL_TIM_Base_Start(&htim4);
+	HAL_TIM_Base_Start_IT(&htim4);
+	*/
+	
+	HAL_UART_Receive_IT(&huart4,&h4RX,size);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -162,8 +216,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_UART4
+                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.Uart4ClockSelection = RCC_UART4CLKSOURCE_PCLK1;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL;
@@ -319,6 +374,51 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 4800;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 9;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief TIM3 Initialization Function
   * @param None
   * @retval None
@@ -339,7 +439,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 480;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 2;
+  htim3.Init.Period = 10;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -360,6 +460,86 @@ static void MX_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 48000;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 9;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
+
+}
+
+/**
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 19200;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart4.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart4.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
 
 }
 
@@ -461,34 +641,122 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+//Interuption du timer 3 toute les 10ms
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	HAL_ADC_Start(&hadc2);
-	HAL_ADC_PollForConversion(&hadc2,timeout);
-  sig = HAL_ADC_GetValue(&hadc2);
 	
-	if(i<100){
-		if(sig<0x7E0){
-			somme10 += 0x7E0-sig;
+	if(htim == &htim3){
+		//Lecture de l'ADC 
+		HAL_ADC_Start(&hadc2);
+		HAL_ADC_PollForConversion(&hadc2,timeout);
+		sig = HAL_ADC_GetValue(&hadc2);
+		
+		/*
+		if(i<100){
+			if(sig<centre){
+				somme100 += centre-sig;
+			}
+			else{
+				somme100 += sig-centre;
+			}
+			i++;
 		}
 		else{
-			somme10 += sig-0x7E0;
+			//écriture sur l'ADC2
+			if(somme100<(seuil)){
+				HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,0x000);
+			}
+			else{
+				HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,0xFFF);
+			}
+			HAL_DAC_Start (&hdac, DAC_CHANNEL_1);
+			i=0;
+			somme100=0;
 		}
-		i++;
+		*/
+		//écriture sur l'ADC1
+		HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_12B_R,sig);
+		HAL_DAC_Start (&hdac, DAC_CHANNEL_2);
+	}
+	else if(htim == &htim2){
+		if(allume == 1){
+			HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,sinus[cpt_sin]);
+			HAL_DAC_Start (&hdac, DAC_CHANNEL_1);
+			
+			cpt_sin++;
+			if(cpt_sin == 10){
+				cpt_sin=0;
+			}
+		}
+		else{
+			HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,2048);
+			HAL_DAC_Start (&hdac, DAC_CHANNEL_1);
+		}
+	}
+	else if(htim == &htim4){
+		if(allume ==1){
+			if(cpt_t4 == tps_son/10){
+				cpt_t4 = 0;
+				allume = 0;
+			}
+			else{
+				cpt_t4++;
+			}
+		}
+		else{
+			if(cpt_t4 == tps_silence/10){
+				cpt_t4 = 0;
+				allume = 1;
+			}
+			else{
+				cpt_t4++;
+			}
+		}
+	}
+	
+	}
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if(h4RX != '\n'){
+		stock[cpt_uart] = h4RX;
+		cpt_uart++;
 	}
 	else{
-		if(somme10<(0x7FF*10)){
-			HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,0x000);
+		stock[cpt_uart] = '\0';
+		cpt_uart = 0;
+		cpt_split = 0;
+		while((stock[cpt_split] != ' ')){
+			freq_c[cpt_split] = stock[cpt_split];
+			cpt_split++;
 		}
-		else{
-			HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,0xFFF);
+		
+		freq = atoi(freq_c);
+		htim2.Instance->PSC = 480000/(freq);
+		cpt_split++;
+		deb = cpt_split;
+		
+		while((stock[cpt_split] != ' ')){
+			tps_son_c[cpt_split - deb] = stock[cpt_split];
+			cpt_split++;
 		}
-		HAL_DAC_Start (&hdac, DAC_CHANNEL_1);
-		i=0;
-		somme10=0;
+		
+		tps_son = atoi(tps_son_c);
+		cpt_split++;
+		deb = cpt_split;
+		
+		while((stock[cpt_split] != '\0')){
+			tps_silence_c[cpt_split - deb] = stock[cpt_split];
+			cpt_split++;
+		}
+		
+		tps_silence = atoi(tps_silence_c);
+		HAL_TIM_Base_Start(&htim2);
+		HAL_TIM_Base_Start_IT(&htim2);
+
+		HAL_TIM_Base_Start(&htim4);
+		HAL_TIM_Base_Start_IT(&htim4);
+		
 	}
-	HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_12B_R,sig);
-	HAL_DAC_Start (&hdac, DAC_CHANNEL_2);
-	}
+	HAL_UART_Receive_IT(&huart4,&h4RX,size);
+}
 /* USER CODE END 4 */
 
 /**
