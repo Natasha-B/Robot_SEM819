@@ -10,7 +10,8 @@ unsigned int timer_load;
 xdata float t_pos_min = 0.5;  // Dur?e de l'impulsion en ms pour -90? 
 xdata float t_pos_max = 2.4;  // Dur?e de l'impulsion en ms pour 90? 
 xdata float alpha;  // Dur?e d'impulsion par d?gr? d'angle 
-
+int  position= 0;
+unsigned int timer_loade;
 /**/
 void delay(int j){ 
  	xdata unsigned int n, cp; 
@@ -41,6 +42,12 @@ void cfg_clk_ext(void){
 	OSCICN = 0x08;	
 }
 
+void config_servo_v(){
+	P1MDOUT |= 0x08;
+	alpha = (t_pos_max - t_pos_min) / 180;
+		
+}
+
 //Interruption liée au PCA
 void interPCA() interrupt 9 {
 	if (PCA0CN >= 0x80){
@@ -56,7 +63,7 @@ void interPCA() interrupt 9 {
 /**/
 unsigned int pos2timer_count(int pos){   // int pos
 	pos += 90;  // pos = [0?, 180?] 
-
+	
 // Dur?e de l'impulsion: 
 	 t_pulse = (t_pos_min + (pos * alpha)); 
 
@@ -72,7 +79,7 @@ unsigned int pos2timer_count(int pos){   // int pos
 
 //Modification de la position du servomoteur vertical
 void chg_servo_pos_v(int pos){
-	unsigned int timer_loade = 0xFF-pos2timer_count(pos);
+	timer_loade = 0xFFFF-pos2timer_count(pos);
 
 	Cde_Servo_V = 1;
 	PCA0CN &= 0xBF; //Désactivation du PCA
@@ -80,7 +87,7 @@ void chg_servo_pos_v(int pos){
 	
 	//Changement de la valeur de référence
 	PCA0CPL0 = timer_loade%256;
-	PCA0CPH0 = timer_loade>>4;
+	PCA0CPH0 = timer_loade>>8;
 	
 	//Activation du PCA
 	PCA0CN |= 0x40;
@@ -91,13 +98,13 @@ void chg_servo_pos_v(int pos){
 
 /**/
 void main(){
-	int position = 0;
+	
 	WDTCN = 0xDE;
 	WDTCN = 0xAD;
 	
 	XBR2 |= 0x40;
 	EA = 1;
-	P1MDOUT = 0xFF;
+	config_servo_v();
 	cfg_clk_ext();
 	config_PCA();
 	
