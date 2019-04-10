@@ -1,4 +1,0 @@
-"STARTUP.obj",
-"main.obj" 
-TO "carteMaster" 
-RAMSIZE(256) 
