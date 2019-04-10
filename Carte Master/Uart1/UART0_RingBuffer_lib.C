@@ -61,8 +61,9 @@
 #include <intrins.h>
 #include "servomoteur.h"
 #include "telemetre_ultrason.h"
+#include "mesure_courant.h"
 #include <math.h>
-
+#include "servo_V.h"
 
 #ifndef CFG_Globale
    #define CFG_Globale
@@ -77,6 +78,8 @@
 xdata char vitesse[3]="20";
 xdata int epreuve=0;
 xdata char angleMem[3]="000";
+xdata int signe=2;
+xdata int stop=0;
 
 //*************************************************************************************************
 // DEFINITION DES MACROS DE GESTION DE BUFFER CIRCULAIRE
@@ -141,31 +144,7 @@ static RB_CREATE(in, unsigned char xdata);            /* static struct { ... } i
 
 //**************************************************************************************************
 //**************************************************************************************************
-void UART0_ISR(void) interrupt 0x4 {
- 
-//	static unsigned int cp_tx = 0;
-//  static unsigned int cp_rx = 0;
-	
-  if (TI0==1) // On peut envoyer une nouvelle donnée sur la liaison série
-  { 
-  	if(!RB_EMPTY(&out)) {
-       SBUF0 = *RB_POPSLOT(&out);      /* start transmission of next byte */
-       RB_POPADVANCE(&out);            /* remove the sent byte from buffer */
-//			 cp_tx++;
-  	}
-  	else TXactive = 0;                 /* TX finished, interface inactive */
-	TI0 = 0;
-  }
-  else // RI0 à 1 - Donc une donnée a été reçue
-  {
-		if(!RB_FULL(&in)) {                   // si le buffer est plein, la donnée reçue est perdue
-     	*RB_PUSHSLOT(&in) = SBUF0;        /* store new data in the buffer */
-		  RB_PUSHADVANCE(&in);               /* next write location */
-//		  cp_rx++;
-	 }
-   RI0 = 0;
-  }
-}
+
 // **************************************************************************************************
 // init_Serial_Buffer: Initialisation des structuresde gestion des buffers transmission et stock
 // *************************************************************************************************
@@ -295,9 +274,9 @@ void cfg_UART1_mode1(void)
 {
 		PCON  |= 0x10; //SMOD0: UART1 Baud Rate Doubler Disabled.
 		PCON &= 0xF7;  // SSTAT1=0
-		SCON1 = 0x60;   // Mode 1 - Check Stop bit - stock validée
+		SCON1 = 0x70;   // Mode 1 - Check Stop bit - stock validée
 	
-    //EIE2 |= 0x40;        // interruption UART0 autorisée	ES1=1
+    //EIE2 |= 0x40;        // interruption UART1 autorisée	ES1=1
 }
 void putChar1(char carac){
 	SBUF1=carac;
@@ -319,14 +298,71 @@ char getChar1(){
 		}
 	reception = SBUF1;
 	SCON1 &= 0xFE;
-	serOutchar(reception);
 	return reception;
 	}
+
+	void UART0_ISR(void) interrupt 0x4 {
+ 
+//	static unsigned int cp_tx = 0;
+//  static unsigned int cp_rx = 0;
 	
+  if (TI0==1) // On peut envoyer une nouvelle donnée sur la liaison série
+  { 
+  	if(!RB_EMPTY(&out)) {
+			if(*RB_POPSLOT(&out)=='Q'){
+				putString1("stop\r");
+			}
+       SBUF0 = *RB_POPSLOT(&out);      /* start transmission of next byte */
+       RB_POPADVANCE(&out);            /* remove the sent byte from buffer */
+//			 cp_tx++;
+  	}
+  	else TXactive = 0;                 /* TX finished, interface inactive */
+	TI0 = 0;
+  }
+  else // RI0 à 1 - Donc une donnée a été reçue
+  {
+		if(!RB_FULL(&in)) {                   // si le buffer est plein, la donnée reçue est perdue
+     	*RB_PUSHSLOT(&in) = SBUF0;        /* store new data in the buffer */
+		  RB_PUSHADVANCE(&in);               /* next write location */
+//		  cp_rx++;
+	 }
+   RI0 = 0;
+  }
+}
+//void getString1(char* chaine){ 
+//	xdata int i = 0;
+//	do{
+//		chaine[i]=getchar1();
+//		i++;
+//	}
+//	while(chaine[i]!='>');
+//}
 	
-void Commande_effectuee(char c){
-	while(getChar1()!=c){
+void getString1(char* chaine){ 
+	xdata int i = 0;
+	for(i=0;i<5;i++){
+		chaine[i]=getChar1();
 	}
+}
+void Commande_effectuee(){
+	xdata char chaine[32]="";
+	xdata int i = 0;
+	xdata int test =0;
+	while(test!=1){
+		if (serInchar()=='Q'){
+			putString1("stop\r");
+			stop = 1;
+			break;
+		}
+		putString1("pids\r");
+		getString1(chaine);	
+		for(i=0;i<strlen(chaine);i++){
+			if (chaine[i]=='0'){
+				test = 1;
+			}
+		}
+	}
+	delay(10);
 }
 	void mon_itoa(int chiffre,char* distance_obs){
 		xdata int i;
@@ -404,49 +440,61 @@ void Commande_effectuee(char c){
 	
 	void avanceX(char* distanceX){
 		if (distanceX[0]=='-'){
+			signe = 1;
 			rotationG(90);
+			distanceX[0]='+';
 		}
 		else{
+			signe = 0;
 			rotationD(90);
 		}
-		Commande_effectuee('>');
-
-		//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
-		putString1("digo 1:");
-		putString1(distanceX);
-		putString1(":20");
-		putString1(" 2:");
-		putString1(distanceX);
-		putString1(":20");
-		putChar1('\r');
-	}
-	
-	void avanceY(char* distanceY,char* distanceX){
-		if (distanceX[0]=='-'){
-			if (distanceY[0]=='-'){
-				rotationG(90);
-			} 
-			else{
-				rotationD(90);
-			}
+		Commande_effectuee();
+		if(stop==1){
 		}
 		else{
-			if (distanceY[0]=='-'){
-				rotationD(90);
-			} 
+			putString1("digo 1:");
+			putString1(distanceX);
+			putString1(":20");
+			putString1(" 2:");
+			putString1(distanceX);
+			putString1(":20");
+			putChar1('\r');
+		}
+	}
+	void avanceY(char* distanceY){
+		if(stop==1){
+		}
+		else{
+			if (signe==1){
+				if (distanceY[0]=='-'){
+					rotationG(90);
+					distanceY[0]='+';
+				} 
+				else{
+					rotationD(90);
+				}
+			}
 			else{
-				rotationG(90);
+				if (distanceY[0]=='-'){
+					rotationD(90);
+				} 
+				else{
+					rotationG(90);
+				}
+			}
+			Commande_effectuee();
+			if(stop==1){
+			}
+			else{
+				putString1("digo 1:");
+				putString1(distanceY);
+				putString1(":20");
+				putString1(" 2:");
+				putString1(distanceY);
+				putString1(":20");
+				putChar1('\r');
 			}
 		}
-	  Commande_effectuee('>');
-		//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
-		putString1("digo 1:");
-		putString1(distanceY);
-		putString1(":20");
-		putString1(" 2:");
-		putString1(distanceY);
-		putString1(":20");
-		putChar1('\r');
 	}
 		
 	
@@ -478,6 +526,8 @@ void Commande_effectuee(char c){
 	xdata int position_servo = 1;
 	xdata char distance_obs[3]="";
 	xdata int d=0;
+	xdata char courant[4]="";
+	xdata	int courantI = 0;
 		
 	if(stock[0]=='D'){			// Début Epreuve
 		serOutstring("******Epreuve 1******");
@@ -602,20 +652,22 @@ void Commande_effectuee(char c){
 				calcDistanceX(distanceX);
 				calcDistanceY(distanceY);				
 				avanceX(distanceX);
-        Commande_effectuee('>');
+        Commande_effectuee();
 				
-				//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
-				avanceY(distanceY,distanceX);
-				Commande_effectuee('>');
+				
+				avanceY(distanceY);
+				Commande_effectuee();
 
-				//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
+				
 				if (distanceY[0]=='-'){
 					rotationG(180);
 				}
 				angleRob=atoi(angleRobot);
-			  Commande_effectuee('>');
-
-				//delay(1500); /////////////////////// A changer plus tard ///////////////////////////////////////////////////
+			  Commande_effectuee();
+				if(stop==1){
+					stop=0;
+				}
+				else{
 				if (angleRob>0){
 					rotationG(angleRob);
 				}
@@ -624,25 +676,36 @@ void Commande_effectuee(char c){
 					rotationD(angleRob);
 				}
 			serOutstring("\r\nB");
+			}
 			}	
 			
 			
 			//servomoteur
-			else if((stock[1]=='S')&&(stock[0]='C')&&(stock[2]==' ')&&(stock[3]='H')&&(stock[4]==' ')&&(stock[5]='A')&&(stock[6]=':')){
+			else if((stock[1]=='S')&&(stock[0]=='C')&&(stock[2]==' ')&&((stock[3]=='H')||(stock[3]=='V'))&&(stock[4]==' ')&&(stock[5]=='A')&&(stock[6]==':')){
 				
 				for (i=7;i<=strlen(stock);i++){
 					angle[i-7]=stock[i];
 				}
 				if (stock[3]=='H'){
 					strcpy(angleMem,angle);
-				}
-				machin = atoi(angle);
-				if (((machin)>= -90)&&(machin<=90)){
-					position_servo *= machin;
-					servo_pos(position_servo);
-					serOutstring("AS H");
-				}else{
-					serOutchar('#');
+				
+					machin = atoi(angle);
+					if (((machin)>= -90)&&(machin<=90)){
+						position_servo *= machin;
+						servo_pos(position_servo,stock[3]);
+						serOutstring("AS H");
+					}else{
+						serOutchar('#');
+					}
+				} else if (stock[3] == 'V'){
+					machin = atoi(angle);
+					if (((machin)>= -90)&&(machin<=90)){
+						position_servo *= machin;
+						chg_servo_pos_v(position_servo);
+						serOutstring("AS V");
+					}else{
+						serOutchar('#');
+					}
 				}
 			}
 			
@@ -657,6 +720,16 @@ void Commande_effectuee(char c){
 					serOutstring(strcat(strcat(angle,":"),distance_obs));
 				}
 		}
+			else if ((stock[0] == 'M')&&(stock[1] == 'I')){
+				courantI = conversion_adc0(1,0);
+				mon_itoa(courantI,courant);
+				serOutstring(courant);
+			}
+			else if ((stock[0] == 'M')&&(stock[1] == 'E')){
+				courantI = conversion_adc0(1,1);
+				mon_itoa(courantI,courant);
+				serOutstring(courant);
+			}
 			
 			
 			else{

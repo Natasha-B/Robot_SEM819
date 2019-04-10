@@ -5,14 +5,14 @@
   
  
 sbit signal_entre = P1^1;
-long sysclk = 22118400;  // Fréquence de l'horloge externe 
-int front;
-int temps;
-float distance;
-int test = 1;
+xdata long sysclk = 22118400;  // Fréquence de l'horloge externe 
+xdata int front;
+xdata int temps;
+xdata float distance;
+xdata int test = 1;
 // delay de 10x us
 void delay_10u(int j){ 
- unsigned int n, cp; 
+ xdata unsigned int n, cp; 
  for(n=0;n<j;n++){ 
  	for(cp=0;cp<20;cp++){ 
  	}; 
@@ -88,9 +88,9 @@ void int6() interrupt 18 {
 
  
 float calc_dist(){
-	 int j = 0;
-	 int i=0;
-	 float distance;
+	 xdata int j = 0;
+	 xdata int i=0;
+	 xdata float distance;
 	 while(j<8){
 		if (i<3){
 			signal_entre = 1;

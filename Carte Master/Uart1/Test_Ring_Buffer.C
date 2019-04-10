@@ -49,11 +49,12 @@
 #include <string.h>
 
 #include "servomoteur.h"
+#include "servo_V.h"
 #include "telemetre_ultrason.h"
 #include <UART0_RingBuffer_lib.h>
 #ifndef CFG_Globale
-  #define CFG_Globale
-  #include <CFG_Globale.h>
+#define CFG_Globale
+#include <CFG_Globale.h>
 #endif
 
 
@@ -99,11 +100,15 @@ void main(void) {
 	   Oscillator_Init();
 	   Port_IO_Init();
 	   
+		 
 	   cfg_Clock_UART();
      cfg_UART0_mode1();
 		 cfg_UART1_mode1();
 		 config_telem_ultrason();
 	   config_servo();
+		 config_PCA();
+		 config_servo_v();
+		 config_courant();
      init_Serial_Buffer();                            
      EA = 1;                              /* allow interrupts to happen */
 	

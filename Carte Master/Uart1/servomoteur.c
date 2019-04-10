@@ -22,13 +22,14 @@ unsigned int cp;
 
 
  // Servomoteur HS-422: +
-sbit Cde_Servo = P1^2; 
+sbit Cde_Servo_H = P1^2; 
+sbit Cde_Servo_V = P1^3;
 xdata float t_pos_min = 0.5;  // Dur?e de l'impulsion en ms pour -90? 
 xdata float t_pos_max = 2.4;  // Dur?e de l'impulsion en ms pour 90? 
 xdata float alpha;  // Dur?e d'impulsion par d?gr? d'angle 
 
  void delay(int j){ 
- 	unsigned int n, cp; 
+ 	xdata unsigned int n, cp; 
  	for(n=0;n<j;n++){ 
  		for(cp=0;cp<2500;cp++){ 
  		}; 
@@ -77,8 +78,8 @@ void cfg_timer4(){
  */ 
  void cfg_servo(){ 
 // Initialisation de la sortie ? 0: 
- 	Cde_Servo = 1; 
-
+ 	Cde_Servo_H = 1; 
+	Cde_Servo_V = 1; 
 // Active la sortie en push-pull: 
  	 
 
@@ -104,8 +105,8 @@ void cfg_crossbar(){
   */ 
  void int_timer4_delay() interrupt 16{ 
 // Fin de l'impulsion du contr?le du servomoteur: 
- 	Cde_Servo = 0; 
-
+ 	Cde_Servo_H = 0; 
+	Cde_Servo_V = 0; 
 // D?sactivation du timer 4: 
  	T4CON &= 0xFB; 
 
@@ -142,33 +143,59 @@ void cfg_crossbar(){
   * @param int pos: position angulaire [-90?, 90?] que l'on r?cup?re via une liaison UART que l'on convertit en int  
   * @return void 
   */ 
- void servo_pos(int pos){ // int pos
+ void servo_pos(int pos, char choix){ // int pos
 // Conversion de l'angle en la valeur ? charger dans le Timer: 
  	int timer_load = pos2timer_count(pos); // pos
 
  	// Envoie la commande plusieurs fois au servomoteur: 
  	int i,j,k;
- 	for(i = 0; i < 500; i++) { 
-		// Initialisation du Timer 4 ? la valeur souhait?e: 
- 		TH4_TL4 = timer_load; 
+	 
+	 if (choix == 'H'){
+			for(i = 0; i < 500; i++) { 
+				// Initialisation du Timer 4 ? la valeur souhait?e: 
+				TH4_TL4 = timer_load; 
 
-		// Activation du timer 4: 
-	  T4CON |= 0x04; 
+				// Activation du timer 4: 
+				T4CON |= 0x04; 
 
 
 
-		// Active la sortie contr?lant le servomoteur: 
- 		Cde_Servo = 1;  
+				// Active la sortie contr?lant le servomoteur: 
+				Cde_Servo_H = 1;  
 
-		//... La sortie contr?lant le servomoteur est d?sactiv?e dans l'interruption de Timer 4 
+				//... La sortie contr?lant le servomoteur est d?sactiv?e dans l'interruption de Timer 4 
 
-		// Attend le flag: 
- 		while(Cde_Servo == 1); 
+				// Attend le flag: 
+				while(Cde_Servo_H == 1); 
 
- 		// Attente suppl?mentaire: 
-		for(j=0; j<0xFF; j++) for(k=0; k<0x15; k++) ; 
- 	} 
-	Cde_Servo = 1;
+				// Attente suppl?mentaire: 
+				for(j=0; j<0xFF; j++) for(k=0; k<0x15; k++) ; 
+			} 
+			Cde_Servo_H = 1;
+		} else if (choix == 'V'){
+				for(i = 0; i < 500; i++) { 
+					// Initialisation du Timer 4 ? la valeur souhait?e: 
+					TH4_TL4 = timer_load; 
+
+					// Activation du timer 4: 
+					T4CON |= 0x04; 
+
+
+
+					// Active la sortie contr?lant le servomoteur: 
+					Cde_Servo_V = 1;  
+
+					//... La sortie contr?lant le servomoteur est d?sactiv?e dans l'interruption de Timer 4 
+
+					// Attend le flag: 
+					while(Cde_Servo_V == 1); 
+
+					// Attente suppl?mentaire: 
+					for(j=0; j<0xFF; j++) for(k=0; k<0x15; k++) ; 
+				} 
+				Cde_Servo_V = 1;
+		}
+			
  } 
 
 void config_servo(){
