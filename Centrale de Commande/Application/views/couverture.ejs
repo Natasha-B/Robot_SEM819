@@ -68,8 +68,8 @@
 		--><div class = "deplacements" id = "deplacements">
 			<h3> Déplacements du robot </h3>
 			<div class = "deplacements1">
-			<button class="button" type="button" value="commande" id="avance" /><i class="fas fa-forward"></i></button><!--
-		--><button class="button" type="button" value="commande" id="recule" /><i class="fas fa-backward"></i></button><!--
+			<button class="button" type="button" value="commande" id="avance" /> Avancer <i target="text" class="fas fa-forward"></i></button><!--
+		--><button class="button" type="button" value="commande" id="recule" /> Reculer <i target="text" class="fas fa-backward"></i></button><!--
 		--></div><!--
 		 --><div class = "deplacements1">
 			<form method="post">
@@ -80,7 +80,7 @@
 		 --><div class = "deplacements1">
 			<button class="button" type="button" value="commande" id="tourne_d" />Rotation 90° droite</button><!--
 		 --><button class="button" type="button" value="commande" id="tourne_g" />Rotation 90° gauche</button><!--
-		 --><button class="button" type="button" value="commande" id="demiTour" />Demi tour</button><!--
+		 --><button class="button" type="button" value="commande" id="demiTour" />Demi-tour</button><!--
 		 --></div><!--
 		--> <div class = "deplacements1"><!--
 		--> <form method="post">
@@ -89,17 +89,17 @@
 		--> <form method="post">
 			   <p><label>Angle de rotation (°)</label> : <input type="number" id ="A" min=1 max = 180 name="vitesse" value= 90 required /></p>
 			</form><!--
-		--> <button class="button" type="button" value="commande" id="rotation" /><i class="fas fa-sync-alt"></i></button><!--	
-		--> <button class="buttonStop" type="button" value="commande" id="stop" /><i class="fas fa-stop"></i></button><!--
+		--> <button class="button" type="button" value="commande" id="rotation" /> Rotation <i class="fas fa-sync-alt" target="text"></i></button><!--	
+		--> <button class="buttonStop" type="button" value="commande" id="stop" /> Stop <i class="fas fa-stop" target="text"></i></button><!--
 		--> </div><!--
 		 --><div class = "deplacements1">
-			<form method="post">
+			<form method="post" class="solo">
 			   <p><label>x </label> : <input type="number" id ="coord_x" min=-99 max = 99 name="coord_x" value= 0 required /></p>
 			</form><!--
-		 --><form method="post">
+		 --><form method="post" class="solo">
 			   <p><label>y </label> : <input type="number" id ="coord_y" min= -99 max = 99 name="coord_y" value= 0 required /></p>
 			</form><!--
-		--> <form method="post">
+		--> <form method="post" class="solo">
 		   		<p><label>angle </label> : <input type="number" id ="coord_angle" min= -180 max = 180 name="coord_angle" value= 0 required /></p>
 		    </form><!--
 		--><button type="button" class="button" id="coord_def" value="commande" /> Go <i target="text" class="fas fa-fighter-jet"></i> </button><!--
@@ -168,16 +168,16 @@
 
 	--><div class = "pointeur" id = "pointeur">
 			<h3> Pointeur lumineux </h3>
-			<form method="post">
+			<form method="post" class="solo">
 			   <p><label>Intensité en % </label> : <input type="number" id="I" min=1 max = 100 name="intensité" value=100 required /></p>
 			</form>
-			<form method="post">
+			<form method="post" class="solo">
 			   <p><label>Nombre de périodes </label> : <input type="number" id ="N" min=1 max = 99 name="périodes" value=1 required /></p>
 			</form>
-			<form method="post">
+			<form method="post" class="solo">
 			   <p><label>Temps allumé (x100 ms)</label> :<input type="number" id ="D1"  min=1 max = 99 name="allumé" value=99 required /></p>
 			</form>
-			<form method="post">
+			<form method="post" class="solo">
 			   <p><label>Temps éteint (x100 ms) </label> :<input type="number" id ="D2" min=0 max = 99 name="éteind" value=0 required /></p>
 			</form>
 			<button type="button" class="button" id="active_p" value="command" />Allumer<i target="text" class="far fa-lightbulb"></i></button>
@@ -267,7 +267,9 @@
 <!-- Section indicateurs -->
 	<div class="indicateurs" id="indicateurs">
 		<h2>Messages du robot</h2>
-		<p> Consomation : </p>
+			<section id="zone_chat">
+            	<p> Consomation : </p>
+        	</section>
 	</div>
 
 

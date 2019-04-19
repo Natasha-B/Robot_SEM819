@@ -26,7 +26,8 @@ var io = require('socket.io').listen(server);
 // Port série 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 });
+//const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 });
+const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 });
 
 const parser = port.pipe(new Readline());
 
@@ -46,7 +47,7 @@ parser.on('error', function(err) {
 
 // Reception du message d'init
 parser.on('data', function (data) {
-  console.log('Message: ', data);
+  console.log('Message du robot: ', data);
   io.to('all').emit('message', data);
 });
 
@@ -57,17 +58,21 @@ parser.on('data', function (data) {
 
 
 io.sockets.on('connection', function (socket) {
-    socket.emit('message', "Vous êtes bien connecté à l'IHM!");
+    console.log('message :', "Mise à jour de l'IHM effectuée");
     socket.join('all');
 
     // Quand le serveur reçoit un signal de type "message" du client    
     socket.on('message', function (message) {
-        console.log("Message de l'IHM :  "+ message);
+        //console.log("Message de l'IHM :  "+ message);
         port.write( message, function(err) {
           if (err) {
             return console.log('Error on write: ', err.message);
 	  	    };
 	  	  console.log('message envoyé au robot : ', message);
+        // Ajoute un message dans la page
+        function insereMessage(message) {
+          $('#zone_chat').prepend('<p>'+ message + '</p>');
+        }
 	  	});
     });
 });
