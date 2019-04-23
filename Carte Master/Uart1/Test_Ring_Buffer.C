@@ -51,6 +51,7 @@
 #include "servomoteur.h"
 #include "servo_V.h"
 #include "telemetre_ultrason.h"
+#include "mesure_courant.h"
 #include <UART0_RingBuffer_lib.h>
 #ifndef CFG_Globale
 #define CFG_Globale
@@ -81,7 +82,7 @@ void Port_IO_Init()
 	 
 	 XBR0      = 0x06;
    XBR2      = 0x44;
-	 XBR1			 = 0x80;
+	 XBR1			 = 0xE0;
 	 P3        |= 0x80;
 }
 
@@ -115,6 +116,7 @@ void main(void) {
 
 
 while(1) {
+		
 		ecoute();
 		
 		 

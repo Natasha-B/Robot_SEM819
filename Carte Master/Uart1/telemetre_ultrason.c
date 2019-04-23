@@ -4,7 +4,7 @@
 #include <c8051F020.h> 
   
  
-sbit signal_entre = P1^1;
+sbit signal_entre = P1^4;
 xdata long sysclk = 22118400;  // Fréquence de l'horloge externe 
 xdata int front;
 xdata int temps;

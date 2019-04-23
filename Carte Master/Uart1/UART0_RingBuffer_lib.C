@@ -80,6 +80,12 @@ xdata int epreuve=0;
 xdata char angleMem[3]="000";
 xdata int signe=2;
 xdata int stop=0;
+xdata int courant_inst = 0;
+xdata int energie_tot = 0;
+xdata int tension1 = 0;
+xdata int counter_T2 =0;
+xdata int distance2 = 1000;
+xdata int FLAG2 = 0;
 
 //*************************************************************************************************
 // DEFINITION DES MACROS DE GESTION DE BUFFER CIRCULAIRE
@@ -235,8 +241,7 @@ unsigned char len,code_err=0;
 //cfg_Clock_UART
 //	Utilisation du Timer 1
 //*****************************************************************************	 
-void cfg_Clock_UART(void)
-{
+void cfg_Clock_UART(void){
   CKCON |= 0x10;      // T1M: Timer 1 use the system clock.
   TMOD |= 0x20;       //  Timer1 CLK = system clock
 	TMOD &= 0x2f;			  // Timer1 configuré en timer 8 bit avec auto-reload	
@@ -246,7 +251,36 @@ void cfg_Clock_UART(void)
 	ET1 = 0;				   // Interruption Timer 1 dévalidée
 	TR1 = 1;				   // Timer1 démarré
 
+	T2CON |= 0x04;		// Timer 4 auto-reload, clock divisÃ© par 12(crossbar) avec comme valeur max 65536 donc 0.5425 us par coup
+	RCAP2L = 0x00;
+	RCAP2H = 0x00;
+
+	
 }
+void time2(void) interrupt 0x5{
+	counter_T2++;
+	if (counter_T2==2){
+		RCAP2L = 0x00;					// pour obtenir 100 ms il faut 65536 + 65536 + 53248 (donc on change les valeurs de reload)
+		RCAP2H = 0x30;
+	}
+	if (counter_T2==3){
+		counter_T2 = 0;
+		FLAG2 = 1;
+		RCAP2L = 0x00;					// pour obtenir 100 ms il faut 65536 + 65536 + 53248 (donc on change les valeurs de reload)
+		RCAP2H = 0x00;
+	}
+	
+	if (epreuve == 1){
+			tension1 = conversion_ADC0();
+			courant_inst = tension1*1000UL / (50UL*100UL);  //Rshunt = 50mohm et gain de 100;
+			energie_tot = energie_tot + (courant_inst*tension1*1);
+}
+	
+	
+	
+	TF2=0;
+}
+
 /*
 void time2 interrupt 5(void){
 	T2 &= 0x7F;
@@ -276,7 +310,7 @@ void cfg_UART1_mode1(void)
 		PCON &= 0xF7;  // SSTAT1=0
 		SCON1 = 0x70;   // Mode 1 - Check Stop bit - stock validée
 	
-    //EIE2 |= 0x40;        // interruption UART1 autorisée	ES1=1
+    IE |= 0x20;        // interruption UART1 autorisée	ES1=1
 }
 void putChar1(char carac){
 	SBUF1=carac;
@@ -527,17 +561,18 @@ void Commande_effectuee(){
 	xdata char distance_obs[3]="";
 	xdata int d=0;
 	xdata char courant[4]="";
-	xdata	int courantI = 0;
-		
+	serOutstring("\n\r");
 	if(stock[0]=='D'){			// Début Epreuve
 		serOutstring("******Epreuve 1******");
 		epreuve=1;
+		energie_tot = 0;
 		}
 	else if(stock[0]=='E'){						// Fin Epreuve
 		epreuve=0;
 		serOutstring("******Fin Epreuve******");
 		}
 	else{
+		
 		if (epreuve==1){
 			if((stock[1]=='V')&&(stock[0]='T')){								// TV vitesse
 				vitesse[2]='\0';
@@ -559,7 +594,7 @@ void Commande_effectuee(){
 			else if(stock[0]=='A'){			// Avancer	
 				if (strlen(stock)==1){
 					avance(vitesse);
-					}
+				}
 				else{
 					for (i = 2;i<strlen(stock);i++){
 							vitesse2[i-2]=stock[i];
@@ -682,7 +717,6 @@ void Commande_effectuee(){
 			
 			//servomoteur
 			else if((stock[1]=='S')&&(stock[0]=='C')&&(stock[2]==' ')&&((stock[3]=='H')||(stock[3]=='V'))&&(stock[4]==' ')&&(stock[5]=='A')&&(stock[6]==':')){
-				
 				for (i=7;i<=strlen(stock);i++){
 					angle[i-7]=stock[i];
 				}
@@ -721,13 +755,11 @@ void Commande_effectuee(){
 				}
 		}
 			else if ((stock[0] == 'M')&&(stock[1] == 'I')){
-				courantI = conversion_adc0(1,0);
-				mon_itoa(courantI,courant);
+				mon_itoa(courant_inst,courant);
 				serOutstring(courant);
 			}
 			else if ((stock[0] == 'M')&&(stock[1] == 'E')){
-				courantI = conversion_adc0(1,1);
-				mon_itoa(courantI,courant);
+				mon_itoa(energie_tot,courant);
 				serOutstring(courant);
 			}
 			
@@ -749,14 +781,20 @@ void Commande_effectuee(){
 void ecoute (void){
 	char c;
 	int compteur = 0;
-	char stock[32]="";
-	
+	char stock[32]="";	
 	while (((c=serInchar())!='\r')){
 		if (c!=0){
 			serOutchar(c);
 			stock[compteur]=c;
 			compteur ++;
 	  }
+	if (FLAG2 == 1){
+		distance2 = (int)(calc_dist());
+		if ((distance2<20)&&(distance2>0)){
+			putString1("stop\r");
+		}
+		FLAG2 = 0;
+	}
 	}
 	transfert(stock);
 }
