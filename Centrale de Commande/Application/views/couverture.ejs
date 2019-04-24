@@ -269,6 +269,17 @@
 		<h2>Messages du robot</h2>
 			<section id="zone_chat">
             	<p> Consomation : </p>
+            	<script>
+            		io.sockets.on('connection', function (socket) {
+    					socket.join('all');
+						// Quand le serveur reçoit un signal de type "message" du client    
+						socket.on('message', function (message) {
+					    	port.write( message, function insereMessage(message) {
+					      		$('#zone_chat').prepend('<p>'+ message + '</p>');
+        				};
+	  					});
+    				});
+            	</script>
         	</section>
 	</div>
 

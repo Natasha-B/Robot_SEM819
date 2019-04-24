@@ -1,8 +1,0 @@
-"STARTUP.obj",
-"pointeur lumineux.obj",
-"slave_main.obj",
-"UART0.obj",
-"SPI_slave.obj",
-"information.obj" 
-TO "carteSlave" 
-RAMSIZE(256) 

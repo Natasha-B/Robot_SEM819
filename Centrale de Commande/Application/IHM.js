@@ -26,8 +26,8 @@ var io = require('socket.io').listen(server);
 // Port série 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-//const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 });
-const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 });
+const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 });
+//const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 });
 
 const parser = port.pipe(new Readline());
 
@@ -47,7 +47,7 @@ parser.on('error', function(err) {
 
 // Reception du message d'init
 parser.on('data', function (data) {
-  console.log('Message du robot: ', data);
+  console.log('\r\n Message du robot: ', data);
   io.to('all').emit('message', data);
 });
 
