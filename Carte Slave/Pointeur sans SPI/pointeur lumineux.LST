@@ -1,4 +1,4 @@
-C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 1   
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/24/2019 09:50:45 PAGE 1   
 
 
 C51 COMPILER V9.52.0.0, COMPILATION OF MODULE POINTEUR_LUMINEUX
@@ -62,7 +62,7 @@ line level    source
   53          void cfg_clk (void){
   54   1        // Enable the external oscillator
   55   1        OSCXCN = 0x67;
-C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 2   
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/24/2019 09:50:45 PAGE 2   
 
   56   1      
   57   1        // Wait at least 1ms
@@ -126,7 +126,7 @@ line level    source
  115           * Registres modifiés : 
  116           */
  117          
-C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 3   
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/24/2019 09:50:45 PAGE 3   
 
  118          void cfg_PWM(void){
  119   1        PCA0CN |= 0x00;
@@ -190,7 +190,7 @@ line level    source
  177   2          //start_blink_led(1,1,2,25);
  178   2          //start_blink_led(0.5,0.5,8,100);
  179   2          //start_blink_led(0.1,1,4,10);
-C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 4   
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/24/2019 09:50:45 PAGE 4   
 
  180   2          //start_blink_led(0.1,1,50,10);
  181   2            break;
@@ -254,7 +254,7 @@ line level    source
  239   1        UART_sendCRLF();
  240   1      }
  241          
-C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 5   
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/24/2019 09:50:45 PAGE 5   
 
  242          /**
  243           * Active le clignotement de la LED:
@@ -270,15 +270,15 @@ line level    source
  253   2          PCA0CPL0 = pca2;
  254   2          PCA0CPH0 = pca1;
  255   2          PCA0CN |= 0x40;
- 256   2          if (fin == 1 & fin2  ==1){
- 257   3          UART_receive();
- 258   3          if (fin ==1){fin2=1; break;};
- 259   3            delay(t_up * 1000);}
- 260   2          if (fin == 1 & fin2  ==1){
- 261   3            UART_receive();
- 262   3            if (fin ==1){fin2=1; break;};
- 263   3              PCA0CN = 0x00;
- 264   3              delay (t_down * 1000);}
+ 256   2          if (fin == 1 & fin2  ==0){
+ 257   3            UART_receive();}
+ 258   2          if (fin ==1){fin2=1; break;};
+ 259   2            delay(t_up * 1000);
+ 260   2          if (fin == 1 & fin2  ==0){
+ 261   3            UART_receive();}
+ 262   2            if (fin ==1){fin2=1; break;};
+ 263   2              PCA0CN = 0x00;
+ 264   2              delay (t_down * 1000);
  265   2          fin2 = 0;
  266   2        }
  267   1      }
@@ -318,9 +318,9 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 6   
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/24/2019 09:50:45 PAGE 6   
 
-   CODE SIZE        =    649    ----
+   CODE SIZE        =    645    ----
    CONSTANT SIZE    =     74    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

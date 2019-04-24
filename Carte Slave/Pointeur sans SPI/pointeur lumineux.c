@@ -253,15 +253,15 @@ void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
 		PCA0CPL0 = pca2;
 		PCA0CPH0 = pca1;
 		PCA0CN |= 0x40;
-		if (fin == 1 & fin2  ==1){
-		UART_receive();
+		if (fin == 1 & fin2  ==0){
+			UART_receive();}
 		if (fin ==1){fin2=1; break;};
-			delay(t_up * 1000);}
-		if (fin == 1 & fin2  ==1){
-			UART_receive();
+			delay(t_up * 1000);
+		if (fin == 1 & fin2  ==0){
+			UART_receive();}
 			if (fin ==1){fin2=1; break;};
 				PCA0CN = 0x00;
-				delay (t_down * 1000);}
+				delay (t_down * 1000);
 		fin2 = 0;
 	}
 }
