@@ -1,0 +1,333 @@
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE POINTEUR_LUMINEUX
+OBJECT MODULE PLACED IN pointeur lumineux.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE pointeur lumineux.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          //------------------------------------------------------------------------------------
+   2          // pointeur lumineux.c
+   3          //------------------------------------------------------------------------------------
+   4          // DATE: 11/03/19
+   5          //
+   6          // Target: C8051F02x
+   7          // Tool chain: KEIL Microvision 4
+   8          //
+   9          // DEVLOPPE PAR : Bru Natacha, Brouse Léa 
+  10          
+  11          //
+  12          //------------------------------------------------------------------------------------
+  13          #include "c8051F020.h"
+  14          #include "pointeur.h"
+  15          #include <string.h>
+  16          #include "UART0.h"
+  17          
+  18          #define SYSCLK 22118400UL //approximate SYSCLK frequency in Hz
+  19          #define BAUDRATE  19200UL          // Baud rate of UART in bps
+  20          #define Preload_Timer0 (SYSCLK/(BAUDRATE*16))
+  21          
+  22          // UART
+  23          char UART_buff;
+  24          char UART_busy = 0;
+  25          int fin = 0;
+  26          int fin2 = 0;
+  27          //------------------------------------------------------------------------------------
+  28          // CONFIGURATION
+  29          //------------------------------------------------------------------------------------
+  30          
+  31          
+  32          /**
+  33           * Configuration de la fonction Delay attente de x ms
+  34           * @param int j, j est le nobte de ms à attendre
+  35           * @return void
+  36           */
+  37          
+  38          void delay(int j){
+  39   1        unsigned int n, cp;
+  40   1        for(n=0;n<j;n++){
+  41   2          for(cp=0;cp<2500;cp++){
+  42   3          };
+  43   2        }
+  44   1      }
+  45          
+  46          /**
+  47           * Configuration de l'horloge externe à 22,1184 MHz, pour assurer une bonne transmission/reception série
+  48           * @param void
+  49           * @return void
+  50           * Registres modifiés : OSCICN , OSCXCN
+  51           */
+  52          
+  53          void cfg_clk (void){
+  54   1        // Enable the external oscillator
+  55   1        OSCXCN = 0x67;
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 2   
+
+  56   1      
+  57   1        // Wait at least 1ms
+  58   1        delay(2);
+  59   1      
+  60   1        // Switch the system clk to the external oscillator
+  61   1        OSCICN = 0x1c;
+  62   1      }
+  63          
+  64          void cfg_Clock_UART(void){
+  65   1        CKCON |= 0x10;      // T1M: Timer 1 use the system clock.
+  66   1        TMOD |= 0x20;       //  Timer1 CLK = system clock
+  67   1        TMOD &= 0x2f;       // Timer1 configuré en timer 8 bit avec auto-reload  
+  68   1        TF1 = 0;          // Flag Timer effacé
+  69   1        
+  70   1        TH1 = -(Preload_Timer0);
+  71   1        ET1 = 0;           // Interruption Timer 1 dévalidée
+  72   1        TR1 = 1;           // Timer1 démarré
+  73   1      
+  74   1      }
+  75          
+  76          void cfg_UART0_mode1(void){
+  77   1        RCLK0 = 0;     // Source clock Timer 1
+  78   1        TCLK0 = 0;
+  79   1        PCON  |= 0x80; //SMOD0: UART0 Baud Rate Doubler Disabled.
+  80   1        PCON &= 0xBF;  // SSTAT0=0
+  81   1        SCON0 = 0x70;   // Mode 1 - Check Stop bit - stock validée
+  82   1        
+  83   1        XBR0 |= 0x04;
+  84   1        XBR2 |= 0x40;
+  85   1        P0MDOUT |= 0x01;
+  86   1        
+  87   1          ES0 = 1;        // interruption UART0 autorisée  
+  88   1      
+  89   1      }
+  90          
+  91          void putChar0(char carac){
+  92   1        SBUF0=carac;
+  93   1        while((SCON0 & 0x02)== 0){}
+  94   1        SCON0 &= 0xFD;
+  95   1      }
+  96            
+  97          void putString0(char chaine[32]){
+  98   1        int i;
+  99   1        for (i=0;i<strlen(chaine);i++){
+ 100   2          putChar0(chaine[i]);
+ 101   2        }
+ 102   1      }
+ 103          
+ 104          void cfg_interrupt (void) {
+ 105   1        EA = 1; // enable all interupts
+ 106   1        EIE1 |= 0x08;
+ 107   1        EIP1 |= 0x08;
+ 108   1      }
+ 109          
+ 110          
+ 111          /**
+ 112           * Configuration de la PWM
+ 113           * @param void
+ 114           * @return void
+ 115           * Registres modifiés : 
+ 116           */
+ 117          
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 3   
+
+ 118          void cfg_PWM(void){
+ 119   1        PCA0CN |= 0x00;
+ 120   1        PCA0MD |= 0x09;
+ 121   1        PCA0CPM0 |= 0xc3;
+ 122   1        XBR0 |= 0x08;
+ 123   1        P0MDOUT |= 0xff;
+ 124   1      }
+ 125          
+ 126          
+ 127          //------------------------------------------------------------------------------------
+ 128          // UTILISATION
+ 129          //------------------------------------------------------------------------------------
+ 130          
+ 131          
+ 132          /**
+ 133           * Initialisation de la configuration
+ 134           * @param void
+ 135           * @return void
+ 136           */
+ 137          void init (void) {
+ 138   1        cfg_clk();
+ 139   1        cfg_interrupt();
+ 140   1        cfg_Clock_UART();
+ 141   1        cfg_UART0_mode1();
+ 142   1        cfg_PWM();
+ 143   1        
+ 144   1        XBR2 |= 1<<6; //Activation du Crossbar
+ 145   1      }
+ 146          
+ 147          
+ 148          
+ 149          /**
+ 150           * Envoi d'un retour à la ligne à l'UART
+ 151           * @param void
+ 152           * @return void 
+ 153           */
+ 154          void UART_sendCRLF (void) {
+ 155   1        putChar0('\r');
+ 156   1        putChar0('\n');
+ 157   1      }
+ 158          /**
+ 159           * Réception d'un caractère sur l'UART (fait appel à des fonctions développées par le binome A)
+ 160           * @param void
+ 161           * @return void
+ 162           */
+ 163          void UART_receive (void) {
+ 164   1        char invalid_cmd = 0;
+ 165   1        fin = 0;
+ 166   1        if(UART_buff == 0)
+ 167   1          return;
+ 168   1      
+ 169   1      
+ 170   1        switch (UART_buff) {
+ 171   2          case 'b':
+ 172   2            putChar0('b');
+ 173   2            UART_buff = 0x00;
+ 174   2            fin = 1;
+ 175   2            if (fin2 == 0){
+ 176   3            start_blink_led(3,3,5,25);};
+ 177   2          //start_blink_led(1,1,2,25);
+ 178   2          //start_blink_led(0.5,0.5,8,100);
+ 179   2          //start_blink_led(0.1,1,4,10);
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 4   
+
+ 180   2          //start_blink_led(0.1,1,50,10);
+ 181   2            break;
+ 182   2          
+ 183   2          case 'e': 
+ 184   2            putChar0('e');
+ 185   2            led_off();
+ 186   2            break;
+ 187   2          
+ 188   2          case 'a':
+ 189   2            putChar0('a');
+ 190   2            led_on();
+ 191   2            break;
+ 192   2          
+ 193   2          default:
+ 194   2            invalid_cmd = 1;
+ 195   2            break;
+ 196   2        }
+ 197   1            
+ 198   1        putString0(invalid_cmd ? "Invalid command !" : "OK");
+ 199   1        UART_sendCRLF();
+ 200   1        UART_buff = 0x00;
+ 201   1        
+ 202   1        
+ 203   1      }
+ 204          
+ 205          /**
+ 206           * Interruption de l'UART
+ 207           * @param void
+ 208           * @return void
+ 209           * Registres modifiés : SCON0, SBUF0
+ 210           */
+ 211          void UART() interrupt 4 {
+ 212   1        // Reception
+ 213   1        if(RI0 == 1){
+ 214   2          UART_buff = SBUF0;
+ 215   2          RI0 = 0;
+ 216   2        }}
+ 217            
+ 218          
+ 219          void pointer_interrupt() interrupt 9{
+ 220   1        PCA0CN &= 0x7E;
+ 221   1      } 
+ 222          
+ 223          
+ 224          //------------------------------------------------------------------------------------
+ 225          // APPLICATION
+ 226          //------------------------------------------------------------------------------------
+ 227          
+ 228          /**
+ 229           * Envoi du message de démarrage
+ 230           * @param void
+ 231           * @return void
+ 232           */
+ 233          void Welcome() {
+ 234   1        UART_sendCRLF();
+ 235   1        UART_sendCRLF();
+ 236   1        putString0("********** POINTEUR LUMINEUX **********");
+ 237   1        UART_sendCRLF();
+ 238   1        putString0("Bienvenue :)");
+ 239   1        UART_sendCRLF();
+ 240   1      }
+ 241          
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 5   
+
+ 242          /**
+ 243           * Active le clignotement de la LED:
+ 244           * @return void
+ 245           */
+ 246          int p;
+ 247          void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
+ 248   1        for (p = 0; p < n_period; p++){
+ 249   2          float intensite = (-(((float)intensity * 655.36f)-65536.0f));
+ 250   2          unsigned int pca = (int) intensite;
+ 251   2          int pca1 = (pca/256);
+ 252   2          int pca2 = (pca%256);
+ 253   2          PCA0CPL0 = pca2;
+ 254   2          PCA0CPH0 = pca1;
+ 255   2          PCA0CN |= 0x40;
+ 256   2          if (fin == 1 & fin2  ==1){
+ 257   3          UART_receive();
+ 258   3          if (fin ==1){fin2=1; break;};
+ 259   3            delay(t_up * 1000);}
+ 260   2          if (fin == 1 & fin2  ==1){
+ 261   3            UART_receive();
+ 262   3            if (fin ==1){fin2=1; break;};
+ 263   3              PCA0CN = 0x00;
+ 264   3              delay (t_down * 1000);}
+ 265   2          fin2 = 0;
+ 266   2        }
+ 267   1      }
+ 268          
+ 269          void led_on (){
+ 270   1        PCA0CPL0 = 0x00;
+ 271   1        PCA0CPH0 = 0x00;
+ 272   1        PCA0CN |= 0x40;
+ 273   1        
+ 274   1      }
+ 275          
+ 276          
+ 277          /**
+ 278           * Désactive le clignotement de la LED:
+ 279           * @return void
+ 280           */
+ 281          void led_off() {
+ 282   1        PCA0CPL0 = 0xFF;
+ 283   1        PCA0CPH0 = 0xFF;
+ 284   1        PCA0CN |= 0x40;
+ 285   1      }
+ 286          
+ 287          
+ 288          //------------------------------------------------------------------------------------
+ 289          // TEST
+ 290          //------------------------------------------------------------------------------------
+ 291          
+ 292          int main() {
+ 293   1        WDTCN = 0xDE;
+ 294   1        WDTCN = 0xAD;
+ 295   1        init();
+ 296   1        Welcome();
+ 297   1        while(1){
+ 298   2          UART_receive();
+ 299   2        };
+ 300   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.52.0.0   POINTEUR_LUMINEUX                                                 04/23/2019 12:11:59 PAGE 6   
+
+   CODE SIZE        =    649    ----
+   CONSTANT SIZE    =     74    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8      24
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

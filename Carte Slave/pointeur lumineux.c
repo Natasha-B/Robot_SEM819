@@ -12,14 +12,18 @@
 //------------------------------------------------------------------------------------
 #include "c8051F020.h"
 #include "pointeur.h"
+#include <string.h>
+#include "UART0.h"
 
-
+#define SYSCLK 22118400UL //approximate SYSCLK frequency in Hz
+#define BAUDRATE  19200UL          // Baud rate of UART in bps
+#define Preload_Timer0 (SYSCLK/(BAUDRATE*16))
 
 // UART
 char UART_buff;
 char UART_busy = 0;
-
-
+int fin = 0;
+int fin2 = 0;
 //------------------------------------------------------------------------------------
 // CONFIGURATION
 //------------------------------------------------------------------------------------
@@ -57,49 +61,46 @@ void cfg_clk (void){
 	OSCICN = 0x1c;
 }
 
-
-
-/**
- * Configuration du Timer 2 pour la gestion de l'UART
- * @param void
- * @return void
- * Registres modifiés : T2CON, CKCON , RCAP2, IE
- */
-void cfg_timer2 (void) {
-	RCLK0 = 1;
-	TCLK0 = 1;
-	CPRL2 = 0;
-	CKCON |= 0x20;
-	RCAP2L = 0xB8; // 9600b
-	RCAP2H = 0xFF;
+void cfg_Clock_UART(void){
+	CKCON |= 0x10;      // T1M: Timer 1 use the system clock.
+	TMOD |= 0x20;       //  Timer1 CLK = system clock
+	TMOD &= 0x2f;			  // Timer1 configuré en timer 8 bit avec auto-reload	
+	TF1 = 0;				  // Flag Timer effacé
 	
-	// Interruptions
-	ES0 = 1;
-	ET2 = 0x00; // Overflow
-	
-	// Démarrage TIMER2
-	TR2 = 1;
+	TH1 = -(Preload_Timer0);
+	ET1 = 0;				   // Interruption Timer 1 dévalidée
+	TR1 = 1;				   // Timer1 démarré
+
 }
 
-/**
- * Configuration de l'UART
- * @param void
- * @return void
- * Registres modifiés : SCON0, P0MDOUT, XBR2, XBR0
- */
-void cfg_UART (void) {
-	SCON0 = 0x50;
-	P0MDOUT = 0xFF;
-	XBR2 |= 0x40;
+void cfg_UART0_mode1(void){
+	RCLK0 = 0;     // Source clock Timer 1
+	TCLK0 = 0;
+	PCON  |= 0x80; //SMOD0: UART0 Baud Rate Doubler Disabled.
+	PCON &= 0xBF;  // SSTAT0=0
+	SCON0 = 0x70;   // Mode 1 - Check Stop bit - stock validée
+	
 	XBR0 |= 0x04;
+	XBR2 |= 0x40;
+	P0MDOUT |= 0x01;
+	
+    ES0 = 1;        // interruption UART0 autorisée	
+
+}
+
+void putChar0(char carac){
+	SBUF0=carac;
+	while((SCON0 & 0x02)== 0){}
+	SCON0 &= 0xFD;
 }
 	
-/**
- * Activation des interruptions
- * @param void
- * @return void
- * Registres modifiés : IE
- */
+void putString0(char chaine[32]){
+	int i;
+	for (i=0;i<strlen(chaine);i++){
+		putChar0(chaine[i]);
+	}
+}
+
 void cfg_interrupt (void) {
 	EA = 1; // enable all interupts
 	EIE1 |= 0x08;
@@ -135,69 +136,14 @@ void cfg_PWM(void){
  */
 void init (void) {
 	cfg_clk();
-	cfg_UART();
-	cfg_timer2();
 	cfg_interrupt();
+	cfg_Clock_UART();
+	cfg_UART0_mode1();
 	cfg_PWM();
 	
 	XBR2 |= 1<<6;	//Activation du Crossbar
 }
 
-/**
- * Conversion int to string
- * @param int v , valeur à convertir
- * @return string str2, chaine de caractères associée
- */
-char *itos(unsigned int v) {
-	char str1[20] = "", str2[20] = "";
-	int unite = 0;
-	int indice = 0, indice2 = 0;
-	while(v != 0){
-		unite = v%10; // Unité
-		str1[indice] = 0x30 + unite;
-		indice++;
-		v = (v - unite)/10;
-	}
-	
-	if(indice == 0) {
-		indice = 1;
-		str1[0] = '0';
-	}
-	
-	// Reverse de string
-	for(;indice > 0;indice--) {
-		str2[indice-1] = str1[indice2];
-		indice2++;
-	}
-	str2[indice2+1] = '\0';
-	
-	return str2;
-}
-
-/**
- * Envoi d'un caractère à l'UART
- * @param char c , caractère à envoyer
- * @return void
- * Registres modifiés : SBUF0
- */
-void UART_send (char c) {
-	while(UART_busy == 1) {}
-	UART_busy = 1;
-	SBUF0 = c;
-}
-
-/**
- * Envoi d'une chaine de caractères à l'UART
- * @param char* s , chaine de caractères à envoyer
- * @return void
- */
-void UART_sends (char* s) {
-	int i = 0;
-	while(s[i] != '\0') {
-		UART_send(s[i]);
-		i++;
-	}
-}
 
 
 /**
@@ -206,25 +152,9 @@ void UART_sends (char* s) {
  * @return void 
  */
 void UART_sendCRLF (void) {
-	UART_send(0x0D);
-	UART_send(0x0A);
+	putChar0('\r');
+	putChar0('\n');
 }
-
-/**
- * Envoi d'un entier à l'UART
- * @param char* prefix, préfixe du message
- * @param int a, entier à envoyer
- * @param char* suffix, suffixe du message
- * @return void
- */
-void UART_sendi (char *prefix, int a, char *suffix) {
-	UART_sends(prefix);
-	UART_sends(itos(a));
-	UART_sends(suffix);
-	UART_sendCRLF();
-}
-
-
 /**
  * Réception d'un caractère sur l'UART (fait appel à des fonctions développées par le binome A)
  * @param void
@@ -232,21 +162,31 @@ void UART_sendi (char *prefix, int a, char *suffix) {
  */
 void UART_receive (void) {
 	char invalid_cmd = 0;
+	fin = 0;
 	if(UART_buff == 0)
 		return;
 
 
 	switch (UART_buff) {
-		case 'C':
-			UART_sends('C');
-			start_blink_led(3,3,5,25);
+		case 'b':
+			putChar0('b');
+			UART_buff = 0x00;
+			fin = 1;
+			if (fin2 == 0){
+			start_blink_led(3,3,5,25);};
+		//start_blink_led(1,1,2,25);
+		//start_blink_led(0.5,0.5,8,100);
+		//start_blink_led(0.1,1,4,10);
+		//start_blink_led(0.1,1,50,10);
 			break;
 		
-		case 'E': 
+		case 'e': 
+			putChar0('e');
 			led_off();
 			break;
 		
-		case 'A':
+		case 'a':
+			putChar0('a');
 			led_on();
 			break;
 		
@@ -255,9 +195,11 @@ void UART_receive (void) {
 			break;
 	}
 			
-	UART_sends(invalid_cmd ? "Invalid command !" : "OK");
+	putString0(invalid_cmd ? "Invalid command !" : "OK");
 	UART_sendCRLF();
 	UART_buff = 0x00;
+	
+	
 }
 
 /**
@@ -271,14 +213,8 @@ void UART() interrupt 4 {
 	if(RI0 == 1){
 		UART_buff = SBUF0;
 		RI0 = 0;
-	}
+	}}
 	
-	// Transmission
-	if(TI0 == 1) {
-		UART_busy = 0;
-		TI0 = 0;
-	}
-}
 
 void pointer_interrupt() interrupt 9{
 	PCA0CN &= 0x7E;
@@ -297,12 +233,11 @@ void pointer_interrupt() interrupt 9{
 void Welcome() {
 	UART_sendCRLF();
 	UART_sendCRLF();
-	UART_sends("********** POINTEUR LUMINEUX **********");
+	putString0("********** POINTEUR LUMINEUX **********");
 	UART_sendCRLF();
-	UART_sends("Bienvenue :)");
+	putString0("Bienvenue :)");
 	UART_sendCRLF();
 }
-
 
 /**
  * Active le clignotement de la LED:
@@ -318,16 +253,24 @@ void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
 		PCA0CPL0 = pca2;
 		PCA0CPH0 = pca1;
 		PCA0CN |= 0x40;
-		delay(t_up * 1000);
-		PCA0CN = 0x00;
-		delay (t_down * 1000);
+		if (fin == 1 & fin2  ==1){
+		UART_receive();
+		if (fin ==1){fin2=1; break;};
+			delay(t_up * 1000);}
+		if (fin == 1 & fin2  ==1){
+			UART_receive();
+			if (fin ==1){fin2=1; break;};
+				PCA0CN = 0x00;
+				delay (t_down * 1000);}
+		fin2 = 0;
 	}
 }
 
-void led_on (void){
+void led_on (){
 	PCA0CPL0 = 0x00;
-	PCA0CPH0 = 0x70;
+	PCA0CPH0 = 0x00;
 	PCA0CN |= 0x40;
+	
 }
 
 
@@ -339,7 +282,6 @@ void led_off() {
 	PCA0CPL0 = 0xFF;
 	PCA0CPH0 = 0xFF;
 	PCA0CN |= 0x40;
-	
 }
 
 
