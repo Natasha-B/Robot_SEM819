@@ -39,18 +39,19 @@ void config_adc0(){
 	AD0EN = 1; // activation ADC0
 	REF0CN = 0x03; // voltage ref 2.43V
 	EIE2 &= 0xFD; // disable interrupt ADC0
+	ADC0CN &= 0xF3; // conversion initiated with AD0BUSY
 }
 
 int conversion_ADC0(){
 	
-	ADC0CN &= 0xF3; // conversion initiated with AD0BUSY
+	
 	AD0BUSY = 1;
 	while (AD0INT == 0){};
+	AD0BUSY = 0;
 	AD0INT = 0;
 	convert = ADC0;
 	tension = convert*2430UL/4096UL; // en mV et attention a la plage de mesure et precision
-	courant_conso = tension*1000UL / (50UL*20UL);  //Rshunt = 50mohm et gain de 20
-	AD0BUSY = 0;
+	courant_conso = tension*1000UL/ (50UL*100UL);  //Rshunt = 50mohm et gain de 100
 	ADC0 = 0x00;
 			
 return (tension);
