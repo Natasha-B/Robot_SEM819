@@ -2,13 +2,12 @@
 #include <string.h>
 #include "UART0.h"
 
-#define SYSCLK 22118400UL //approximate SYSCLK frequency in Hz
 #define BAUDRATE  19200UL          // Baud rate of UART in bps
 #define Preload_Timer0 (SYSCLK/(BAUDRATE*16))
 
 
 void Oscillator_Init(){
-    int i = 0;
+    xdata int i = 0;
     OSCXCN    = 0x67;
     for (i = 0; i < 3000; i++);  // Wait 1ms for initialization
     while ((OSCXCN & 0x80) == 0);
@@ -49,7 +48,7 @@ void putChar0(char carac){
 }
 	
 void putString0(char chaine[32]){
-	int i;
+	xdata int i;
 	for (i=0;i<strlen(chaine);i++){
 		putChar0(chaine[i]);
 	}

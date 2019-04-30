@@ -1,17 +1,17 @@
 #include <C8051F020.H>
 #include <stdio.h>
 #include <string.h>
-
+#include "servo_V.h"
 #include "information.h"
 #include "UART0.h"
 #include "pointeur.h"
 
 
 char* clear(char* message){
-	int cpt1 = 0;
-	int cpt2 = 0;
+	xdata int cpt1 = 0;
+	xdata int cpt2 = 0;
 	xdata char clr[32] = "";
-	int taille = strlen(message);
+	xdata int taille = strlen(message);
 	while(cpt1 < taille){
 		if((message[cpt1] == ' ')||(message[cpt1] == '0')||(message[cpt1] == '1')||(message[cpt1] == '2')||(message[cpt1] == '3')||(message[cpt1] == '4')||(message[cpt1] == '5')
 				||(message[cpt1] == '6')||(message[cpt1] == '7')||(message[cpt1] == '8')||(message[cpt1] == '9')){
@@ -25,9 +25,9 @@ char* clear(char* message){
 }
 
 void information(char* message){
-	char prem[3];
-	int cpt_p = 0;
-	int t_up, t_down, n_period, intensity;
+	xdata char prem[3];
+	xdata int cpt_p = 0;
+	xdata int t_up, t_down, n_period, intensity;
 	
 	sscanf(message,"%s ",prem);
 	
@@ -43,9 +43,12 @@ void information(char* message){
 		led_off();
 		
 	}
+	//Test si la commande est relative au servomoteur vertical
 	else if(strcmp(prem, "CS") == 0){
-		int angle;
+		xdata int angle;
+		//Recuperation de la valeur de l'angle souhaite
 		sscanf(clear(message),"%d",&angle);
-		///servo_vertical(angle);
+		//Fonction permettant de faire roter le servomoteur selon l'angle souhaite
+		chg_servo_pos_v(angle);
 		}
 	}

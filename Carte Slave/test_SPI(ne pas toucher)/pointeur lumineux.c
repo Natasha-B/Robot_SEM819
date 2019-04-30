@@ -32,7 +32,7 @@ char UART_busy = 0;
  */
 
 void delay(int j){
-	unsigned int n, cp;
+	xdata unsigned int n, cp;
 	for(n=0;n<j;n++){
 		for(cp=0;cp<2500;cp++){
 		};
@@ -120,7 +120,7 @@ void cfg_interrupt (void) {
 
 void cfg_PWM(void){
 	PCA0CN |= 0x00;
-	PCA0MD |= 0x09;
+	PCA0MD |= 0x01;
 	PCA0CPM0 |= 0xc3;
 	XBR0 |= 0x08;
 	P0MDOUT |= 0xff;
@@ -293,10 +293,13 @@ void UART() interrupt 4 {
 }
 */
 
+
+//TODO A decommenter si fonction seule
+/*
 void pointer_interrupt() interrupt 9{
 	PCA0CN &= 0x7E;
 } 
-
+*/
 
 //------------------------------------------------------------------------------------
 // APPLICATION
@@ -306,13 +309,13 @@ void pointer_interrupt() interrupt 9{
  * Active le clignotement de la LED:
  * @return void
  */
-int p;
+xdata int p;
 void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
 	for (p = 0; p < n_period; p++){
-		float intensite = (-(((float)intensity * 655.36f)-65536.0f));
-		unsigned int pca = (int) intensite;
-		int pca1 = (pca/256);
-		int pca2 = (pca%256);
+		xdata float intensite = (-(((float)intensity * 655.36f)-65536.0f));
+		xdata unsigned int pca = (int) intensite;
+		xdata int pca1 = (pca/256);
+		xdata int pca2 = (pca%256);
 		PCA0CPL0 = pca2;
 		PCA0CPH0 = pca1;
 		PCA0CN |= 0x40;
