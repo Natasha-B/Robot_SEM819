@@ -237,7 +237,14 @@ nav {
 }
 
 
+#mapid { 
+	height: 300px;
+	width: 90%;
+	display: block;
+	position: relative;
+	margin: 2% 2% 2% 5%;
 
+ }
 
 
 
