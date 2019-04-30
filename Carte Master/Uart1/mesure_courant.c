@@ -41,11 +41,11 @@ void config_adc0(){
 	EIE2 &= 0xFD; // disable interrupt ADC0
 }
 
-int conversion_adc0(){
+int conversion_ADC0(){
 	
 	ADC0CN &= 0xF3; // conversion initiated with AD0BUSY
 	AD0BUSY = 1;
-	while (AD0INT = 0){};
+	while (AD0INT == 0){};
 	AD0INT = 0;
 	convert = ADC0;
 	tension = convert*2430UL/4096UL; // en mV et attention a la plage de mesure et precision

@@ -5,7 +5,7 @@
 //void cfg_clk_ext_3();
 void config_adc0();
 void config_courant();
-int conversion_adc0();
+int conversion_ADC0();
 
 
 #endif
