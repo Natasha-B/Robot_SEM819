@@ -17,9 +17,9 @@
 #include "SPI_slave.h"
 #include "information.h"
 
-char receive;
+xdata char receive;
 int cpt_SPI = 0;
-char stock[32] = "";
+xdata char stock[32] = "";
 
 
 void reception_SPI() interrupt 6{
@@ -30,7 +30,7 @@ void reception_SPI() interrupt 6{
 	else{
 		stock[cpt_SPI] = '\0';
 		cpt_SPI = 0;
-		//information(stock);
+		information(stock);
 	}
 	SPIF = 0;
 }
@@ -43,8 +43,6 @@ int main() {
 	cfg_UART0_mode1();
 	init_SPI0();
 	EA=1;
-	
-	information("L I:45 D:56 E:24 N:4\r");
 	
 	while(1){
 	};

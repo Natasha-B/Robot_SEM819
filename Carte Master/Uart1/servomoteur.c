@@ -22,7 +22,7 @@ unsigned int cp;
 
 
  // Servomoteur HS-422: +
-sbit Cde_Servo_H = P1^2; 
+sbit Cde_Servo_H = P1^5; 
 sbit Cde_Servo_V = P1^3;
 xdata float t_pos_min = 0.5;  // Dur?e de l'impulsion en ms pour -90? 
 xdata float t_pos_max = 2.4;  // Dur?e de l'impulsion en ms pour 90? 

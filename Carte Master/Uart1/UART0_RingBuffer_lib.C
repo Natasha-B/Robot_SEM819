@@ -81,7 +81,7 @@ xdata char angleMem[3]="000";
 xdata int signe=2;
 xdata int stop=0;
 xdata int courant_inst = 0;
-xdata int energie_tot = 0;
+xdata float energie_tot = 0;
 xdata int tension1 = 0;
 xdata int counter_T2 =0;
 xdata int distance2 = 1000;
@@ -251,7 +251,7 @@ void cfg_Clock_UART(void){
 	ET1 = 0;				   // Interruption Timer 1 dévalidée
 	TR1 = 1;				   // Timer1 démarré
 
-	T2CON |= 0x04;		// Timer 4 auto-reload, clock divisÃ© par 12(crossbar) avec comme valeur max 65536 donc 0.5425 us par coup
+	T2CON |= 0x04;		// Timer 2 auto-reload, clock divisÃ© par 12(crossbar) avec comme valeur max 65536 donc 0.5425 us par coup
 	RCAP2L = 0x00;
 	RCAP2H = 0x00;
 
@@ -268,16 +268,12 @@ void time2(void) interrupt 0x5{
 		FLAG2 = 1;
 		RCAP2L = 0x00;					// pour obtenir 100 ms il faut 65536 + 65536 + 53248 (donc on change les valeurs de reload)
 		RCAP2H = 0x00;
+		if (epreuve == 1){
+			tension1 = conversion_ADC0(); //mV
+			courant_inst = tension1*1000UL / (50UL*100UL);  //Rshunt = 50mohm et gain de 100; ET courant en mA
+			energie_tot = energie_tot + (0.1*3600UL*courant_inst*(tension1/100UL)/1000UL/1000UL); //en Wh
+		}
 	}
-	
-	if (epreuve == 1){
-			tension1 = conversion_ADC0();
-			courant_inst = tension1*1000UL / (50UL*100UL);  //Rshunt = 50mohm et gain de 100;
-			energie_tot = energie_tot + (courant_inst*tension1*1);
-}
-	
-	
-	
 	TF2=0;
 }
 
