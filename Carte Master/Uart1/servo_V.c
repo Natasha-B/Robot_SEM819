@@ -27,7 +27,7 @@ void config_PCA(){
 	//Configuration de la clock du PCA
 	PCA0MD = 0x01;
 	//Configuration de la comparaison (+autorisation interruption quand comparaison ok
-	PCA0CPM0 = 0x49;
+	PCA0CPM1 = 0x49;
 	//Activation des interruptions
 	EIE1 |= 0x08;
 }
@@ -54,8 +54,8 @@ void interPCA() interrupt 9 {
 	if (PCA0CN >= 0x80){
 		PCA0CN &=0x7F; //Clear le flag 
  		Cde_Servo_V = 1; // Activation de la commande
-	} else if (PCA0CN & 0x01 == 0x01){
-		PCA0CN &= 0xFE;	//Clear le flag
+	} else if (PCA0CN & 0x02 == 0x02){
+		PCA0CN &= 0xFD;	//Clear le flag
 		Cde_Servo_V = 0; //Desactivation de la commande
 	}
 }
@@ -83,12 +83,12 @@ void chg_servo_pos_v(int pos){
 	timer_loade = 0xFFFF-pos2timer_count_v(pos);
 
 	Cde_Servo_V = 1;
-	PCA0CN &= 0xBF; //Désactivation du PCA
+	//PCA0CN &= 0xBF; //Désactivation du PCA
 	//Détermination de la valeur à charger pour la comparaison du PCA
 	
 	//Changement de la valeur de référence
-	PCA0CPL0 = timer_loade%256;
-	PCA0CPH0 = timer_loade>>8;
+	PCA0CPL1 = timer_loade%256;
+	PCA0CPH1 = timer_loade>>8;
 	
 	//Activation du PCA
 	PCA0CN |= 0x40;
