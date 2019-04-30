@@ -270,8 +270,8 @@ void time2(void) interrupt 0x5{
 		RCAP2H = 0x00;
 		if (epreuve == 1){
 			tension1 = conversion_ADC0(); //mV
-			courant_inst = tension1*1000UL / (50UL*100UL);  //Rshunt = 50mohm et gain de 100; ET courant en mA
-			energie_tot = energie_tot + (0.1*3600UL*courant_inst*(tension1/100UL)/1000UL/1000UL); //en Wh
+			courant_inst = tension1*1000UL / (20UL*100UL);  //Rshunt = 50mohm et gain de 20; ET courant en mA
+			energie_tot = energie_tot + (0.1*courant_inst*(tension1/20UL)/1000UL/1000UL); //en J
 		}
 	}
 	TF2=0;

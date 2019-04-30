@@ -51,7 +51,7 @@ int conversion_ADC0(){
 	AD0INT = 0;
 	convert = ADC0;
 	tension = convert*2430UL/4096UL; // en mV et attention a la plage de mesure et precision
-	courant_conso = tension*1000UL/ (50UL*100UL);  //Rshunt = 50mohm et gain de 100
+	//courant_conso = tension*1000UL/ (50UL*100UL);  //Rshunt = 50mohm et gain de 100
 	ADC0 = 0x00;
 			
 return (tension);
