@@ -20,7 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stdlib.h"
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -49,6 +49,8 @@ DAC_HandleTypeDef hdac;
 
 I2C_HandleTypeDef hi2c1;
 
+SPI_HandleTypeDef hspi2;
+
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
@@ -63,32 +65,45 @@ __IO uint16_t sig = 0;
 __IO uint32_t timeout = 10;
 __IO uint16_t somme100 = 0;
 int i = 0;
-//Seuil pour la détection
+//Seuil pour la dï¿½tection
 int seuil = 0x8000;
 //Le 1,5 envoyer par le conditionnement
 int centre = 0x7FF;
+int tps_acqu;
+int cpt_temps;
 
 // UART4
 uint8_t h4RX;
 __IO uint16_t size=1;
 int cpt_uart =0;
 char stock[32] = "";
+char stock2[32] = "";
+char prem;
 
 
-// DAC2
+// GÃ©nÃ©ration de signal
+int cpt_bips = 0;
 int cpt_sin = 0;
+int id_freq = 0;
 int freq = 440;
-char freq_c[4];
+int	tabfreq[21] = {262,294,330,349,392,440,494,523,587,659,698,784,880,988,1046,1175,1319,1397,1568,1760,1976};
 int tps_son = 500;
-char tps_son_c[5];
 int tps_silence = 200;
-char tps_silence_c[5];
-int cpt_split;
-int deb = 0;
+int nb_bips = 3;
 int sinus[10] = {2078,3251,3995,3995,3251,2048,844,100,100,844};
 int cpt_t4 = 0;
 int allume = 1;
+int flag_startgene = 0;
+int flag_startacqu =0;
 
+//carte SD
+FATFS fs;
+FATFS *pfs;
+FIL fil;
+FRESULT fres;
+DWORD fre_clust;
+uint32_t total, free;
+char buffer[100];
 
 
 /* USER CODE END PV */
@@ -104,6 +119,7 @@ static void MX_TIM3_Init(void);
 static void MX_UART4_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -149,23 +165,41 @@ int main(void)
   MX_UART4_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
+  MX_SPI2_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-	
-	htim2.Instance->PSC = 480000/(freq);
-	
-	HAL_TIM_Base_Start(&htim3);
-	HAL_TIM_Base_Start_IT(&htim3);
-	
-	/*
-	HAL_TIM_Base_Start(&htim2);
-	HAL_TIM_Base_Start_IT(&htim2);
-
-	HAL_TIM_Base_Start(&htim4);
-	HAL_TIM_Base_Start_IT(&htim4);
-	*/
 	
 	HAL_UART_Receive_IT(&huart4,&h4RX,size);
 	
+	 /* Mount SD Card */
+  f_mount(&fs, "", 0);
+  
+  /* Open file to write */
+  f_open(&fil, "first.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
+  
+  /* Check free space */
+  f_getfree("", &fre_clust, &pfs);
+  
+  total = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
+  free = (uint32_t)(fre_clust * pfs->csize * 0.5);   
+    
+  /* Free space is less than 1kb */
+  if(free < 1)
+    _Error_Handler(__FILE__, __LINE__);  
+  
+  /* Writing text */
+  f_puts("STM32 SD Card I/O Example via SPI\n", &fil);  
+  f_puts("Save the world!!!", &fil);
+  
+  /* Close file */
+  if(f_close(&fil) != FR_OK)
+    _Error_Handler(__FILE__, __LINE__);  
+  
+  /* Unmount SDCARD */
+  if(f_mount(NULL, "", 1) != FR_OK)
+    _Error_Handler(__FILE__, __LINE__);  
+  
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -175,6 +209,29 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		if(flag_startgene ==1){
+
+      
+			sscanf( stock, "%d %d %d %d",&id_freq,&tps_son,&tps_silence,&nb_bips );
+			
+			freq = tabfreq[id_freq-1];
+			
+			MX_TIM2_Init();
+			MX_TIM4_Init();
+			
+			htim2.Instance->PSC = 480000/freq;
+			HAL_TIM_Base_Start_IT(&htim2);
+			HAL_TIM_Base_Start_IT(&htim4);
+			
+			flag_startgene = 0; 
+			}
+		if(flag_startacqu ==1){
+			sscanf(stock,"%d",&tps_acqu);
+			cpt_temps = 0;
+			HAL_TIM_Base_Start_IT(&htim3);
+			
+			flag_startacqu = 0;
+			}
   }
   /* USER CODE END 3 */
 }
@@ -374,6 +431,46 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 7;
+  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
   * @brief TIM2 Initialization Function
   * @param None
   * @retval None
@@ -439,7 +536,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 480;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 10;
+  htim3.Init.Period = 9;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -661,7 +758,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			i++;
 		}
 		else{
-			//écriture sur l'ADC2
+			//ï¿½criture sur l'ADC2
 			if(somme100<(seuil)){
 				HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,0x000);
 			}
@@ -673,9 +770,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			somme100=0;
 		}
 		*/
-		//écriture sur l'ADC1
+		//ï¿½criture sur l'ADC1
 		HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_12B_R,sig);
 		HAL_DAC_Start (&hdac, DAC_CHANNEL_2);
+		cpt_temps++;
+		if(cpt_temps == tps_acqu*1000){
+			HAL_TIM_Base_Start_IT(&htim3);
+		}
 	}
 	else if(htim == &htim2){
 		if(allume == 1){
@@ -697,6 +798,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			if(cpt_t4 == tps_son/10){
 				cpt_t4 = 0;
 				allume = 0;
+        cpt_bips++;
+        if(cpt_bips == nb_bips){
+          cpt_bips=0;
+          HAL_TIM_Base_Stop(&htim2);
+		      HAL_TIM_Base_Stop_IT(&htim2);
+
+		      HAL_TIM_Base_Stop(&htim4);
+		      HAL_TIM_Base_Stop_IT(&htim4);
+        }
 			}
 			else{
 				cpt_t4++;
@@ -715,45 +825,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	
 	}
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if(h4RX != '\n'){
+	if(h4RX != '\r'){
+		if(cpt_uart==0){
+			prem = h4RX;
+		}
+		if((h4RX == ' ' || h4RX == '0' || h4RX == '1' || h4RX == '2' || h4RX == '3' || h4RX == '4' || h4RX == '5' || h4RX == '6' || h4RX == '7' || h4RX == '8' || h4RX == '9')){
 		stock[cpt_uart] = h4RX;
 		cpt_uart++;
+		}
 	}
 	else{
 		stock[cpt_uart] = '\0';
 		cpt_uart = 0;
-		cpt_split = 0;
-		while((stock[cpt_split] != ' ')){
-			freq_c[cpt_split] = stock[cpt_split];
-			cpt_split++;
+		if(prem == 'A'){
+				flag_startgene = 1;
 		}
-		
-		freq = atoi(freq_c);
-		htim2.Instance->PSC = 480000/(freq);
-		cpt_split++;
-		deb = cpt_split;
-		
-		while((stock[cpt_split] != ' ')){
-			tps_son_c[cpt_split - deb] = stock[cpt_split];
-			cpt_split++;
+		if(prem == 'S'){
+				flag_startacqu = 1;
 		}
-		
-		tps_son = atoi(tps_son_c);
-		cpt_split++;
-		deb = cpt_split;
-		
-		while((stock[cpt_split] != '\0')){
-			tps_silence_c[cpt_split - deb] = stock[cpt_split];
-			cpt_split++;
-		}
-		
-		tps_silence = atoi(tps_silence_c);
-		HAL_TIM_Base_Start(&htim2);
-		HAL_TIM_Base_Start_IT(&htim2);
-
-		HAL_TIM_Base_Start(&htim4);
-		HAL_TIM_Base_Start_IT(&htim4);
-		
 	}
 	HAL_UART_Receive_IT(&huart4,&h4RX,size);
 }
