@@ -53,6 +53,7 @@
 #include "telemetre_ultrason.h"
 #include "mesure_courant.h"
 #include <UART0_RingBuffer_lib.h>
+#include "SPI_master.h"
 #ifndef CFG_Globale
 #define CFG_Globale
 #include <CFG_Globale.h>
@@ -78,11 +79,11 @@ void Port_IO_Init()
 {
 	 
 	 P1MDOUT |= 0x04;
-   P0MDOUT   =  0x41;	
+   P0MDOUT   |=  0x41;	
 	 
-	 XBR0      = 0x06;
-   XBR2      = 0x44;
-	 XBR1			 = 0xE0;
+	 XBR0      |= 0x06;
+   XBR2      |= 0x44;
+	 XBR1			 |= 0xE0;
 	 P3        |= 0x80;
 }
 
@@ -107,10 +108,11 @@ void main(void) {
 		 cfg_UART1_mode1();
 		 config_telem_ultrason();
 	   config_servo();
-		 config_PCA();
-		 config_servo_v();
+//		 config_PCA();
+//		 config_servo_v();
 		 config_courant();
-     init_Serial_Buffer();                            
+     init_Serial_Buffer(); 
+		 init_SPI0();
      EA = 1;                              /* allow interrupts to happen */
 	
 

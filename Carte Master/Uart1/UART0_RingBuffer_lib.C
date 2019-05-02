@@ -64,6 +64,7 @@
 #include "mesure_courant.h"
 #include <math.h>
 #include "servo_V.h"
+#include "SPI_master.h"
 
 #ifndef CFG_Globale
    #define CFG_Globale
@@ -178,6 +179,8 @@ unsigned char serOutchar(char c) {
 	return 0;  // opération correctement réalisée 
   }
    else return 1; // opération échouée - Typiquement Buffer plein
+	
+	return 1;
 }
 // ************************************************************************************************
 //  serInchar: 	lecture d'un caractère dans le buffer de réception de la liaison série
@@ -196,6 +199,8 @@ char c;
   	return c;
   }
   else return 0;
+	
+	return 0;
 }
 // ************************************************************************************************
 //  serInchar_Bin: 	lecture d'un caractère dans le buffer de réception de la liaison série
@@ -217,6 +222,8 @@ unsigned int return_code = 0;
   }
 	// pas de caractère dans le buffer de réception.
   else return return_code;
+	
+	return return_code;
 }
 // *************************************************************************************************
 // serOutstring:  Envoi d'une chaine de caractère dans le buffer de transmission
@@ -586,7 +593,13 @@ void Commande_effectuee(){
 					
 			}
 		}
-
+			
+		else if(((stock[0] == 'A')&&(stock[1] == 'S')&&(stock[2]== 'S'))||((stock[0] == 'S')&&(stock[1] == 'D'))||(stock[0] == 'L')){
+				xdata char testSPI[32];
+				sprintf(testSPI,"%s\r",stock);
+				envoi_SPI(testSPI);
+				
+			}
 			else if(stock[0]=='A'){			// Avancer	
 				if (strlen(stock)==1){
 					avance(vitesse);
@@ -728,14 +741,20 @@ void Commande_effectuee(){
 						serOutchar('#');
 					}
 				} else if (stock[3] == 'V'){
+					xdata char testSPI[32];
+					sprintf(testSPI,"%s\r",stock);
+					envoi_SPI(testSPI);
+					serOutstring("AS V");
+					/*
 					machin = atoi(angle);
 					if (((machin)>= -90)&&(machin<=90)){
 						position_servo *= machin;
 						chg_servo_pos_v(position_servo);
-						serOutstring("AS V");
+						
 					}else{
 						serOutchar('#');
 					}
+					*/
 				}
 			}
 			
@@ -758,8 +777,6 @@ void Commande_effectuee(){
 				mon_itoa(energie_tot,courant);
 				serOutstring(courant);
 			}
-			
-			
 			else{
 				serOutchar('#');
 			}
