@@ -18,7 +18,7 @@ var fs = require('fs');
 var server = http.Server(app);
 var log_file = fs.createWriteStream('Desktop' + 'debug.log', {flags : 'w'});
 var log_stdout = process.stdout;
-var ftpClient = require('ftp-client');
+var Client = require('ftp');
 
 // Chargement de socket.io
 var io = require('socket.io').listen(server);
@@ -89,35 +89,40 @@ parserblue.on('data', function (data) {
 // GESTION FTP   https://www.npmjs.com/package/ftp-client
 //------------------------------------------------------------------------------------
 
-//var ftpClient = require('./lib/client.js'),
-config = {
-    host: 'localhost',
-    port: 21,
-    user: 'centrale',
-    password: 'centrale'
-}
-
-options = {
-    logging: 'basic'
-}
-
-client = new ftpClient(config, options);
-
-client.connect(function () {
-  client.upload(['test/**'], '/public/testFTP', {
-      baseDir: 'test',
-      overwrite: 'older'
-  }, function (result) {
-      console.log(result);
+// récupérer les dossiers
+  var c = new Client();
+  c.on('ready', function() {
+    c.list(function(err, list) {
+      if (err) throw err;
+      console.dir(list);
+      c.end();
+    });
   });
+  // connect to localhost:21 as anonymous
+  c.connect();
 
-  client.download('/public/testFTP2', 'testFTP2/', {
-      overwrite: 'all'
-  }, function (result) {
-      console.log(result);
+// download
+  var c = new Client();
+  c.on('ready', function() {
+    c.get('foo.txt', function(err, stream) {
+      if (err) throw err;
+      stream.once('close', function() { c.end(); });
+      stream.pipe(fs.createWriteStream('foo.local-copy.txt'));
+    });
   });
+  // connect to localhost:21 as anonymous
+  c.connect();
 
-});
+// upload
+  var c = new Client();
+  c.on('ready', function() {
+    c.put('foo.txt', 'foo.remote-copy.txt', function(err) {
+      if (err) throw err;
+      c.end();
+    });
+  });
+  // connect to localhost:21 as anonymous
+  c.connect();
 
 //------------------------------------------------------------------------------------
 // GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
