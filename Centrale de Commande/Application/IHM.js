@@ -18,7 +18,7 @@ var fs = require('fs');
 var server = http.Server(app);
 var log_file = fs.createWriteStream('Desktop' + 'debug.log', {flags : 'w'});
 var log_stdout = process.stdout;
-
+var ftpClient = require('ftp-client');
 
 // Chargement de socket.io
 var io = require('socket.io').listen(server);
@@ -83,6 +83,41 @@ parserblue.on('data', function (data) {
   log_file.write(util.format(d) + '\n');
   log_stdout.write(util.format(d) + '\n');
 });*/
+
+
+//------------------------------------------------------------------------------------
+// GESTION FTP   https://www.npmjs.com/package/ftp-client
+//------------------------------------------------------------------------------------
+
+//var ftpClient = require('./lib/client.js'),
+config = {
+    host: 'localhost',
+    port: 21,
+    user: 'centrale',
+    password: 'centrale'
+}
+
+options = {
+    logging: 'basic'
+}
+
+client = new ftpClient(config, options);
+
+client.connect(function () {
+  client.upload(['test/**'], '/public/testFTP', {
+      baseDir: 'test',
+      overwrite: 'older'
+  }, function (result) {
+      console.log(result);
+  });
+
+  client.download('/public/testFTP2', 'testFTP2/', {
+      overwrite: 'all'
+  }, function (result) {
+      console.log(result);
+  });
+
+});
 
 //------------------------------------------------------------------------------------
 // GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
