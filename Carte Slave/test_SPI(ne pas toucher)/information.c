@@ -14,7 +14,7 @@ char* clear(char* message){
 	xdata int taille = strlen(message);
 	while(cpt1 < taille){
 		if((message[cpt1] == ' ')||(message[cpt1] == '0')||(message[cpt1] == '1')||(message[cpt1] == '2')||(message[cpt1] == '3')||(message[cpt1] == '4')||(message[cpt1] == '5')
-				||(message[cpt1] == '6')||(message[cpt1] == '7')||(message[cpt1] == '8')||(message[cpt1] == '9')){
+				||(message[cpt1] == '6')||(message[cpt1] == '7')||(message[cpt1] == '8')||(message[cpt1] == '9')||(message[cpt1] == '-')){
 				clr[cpt2] = message[cpt1];
 				cpt2++;
 				}
@@ -32,7 +32,9 @@ void information(char* message){
 	sscanf(message,"%s ",prem);
 	
 	if(strcmp(prem, "ASS") == 0 || (strcmp(prem, "SD") == 0)){
-		putString0(message);
+	  xdata char envoi[32];
+		sprintf(envoi,"%s\r",message);
+		putString0(envoi);
 	}
 	else if(strcmp(prem, "L") == 0){
 		sscanf(clear(message), "%d %d %d %d", &t_up, &t_down, &n_period, &intensity); 
@@ -48,7 +50,9 @@ void information(char* message){
 		xdata int angle;
 		//Recuperation de la valeur de l'angle souhaite
 		sscanf(clear(message),"%d",&angle);
+		if (((angle)>= -90)&&(angle<=90)){
 		//Fonction permettant de faire roter le servomoteur selon l'angle souhaite
-		chg_servo_pos_v(angle);
+			chg_servo_pos_v(angle);
+		}
 		}
 	}

@@ -54,11 +54,11 @@ void interPCA() interrupt 9 {
 	if (PCA0CN >= 0x80){
 		PCA0CN &=0x7F; //Clear le flag 
  		Cde_Servo_V = 1; // Activation de la commande
-	} else if (PCA0CN & 0x02 == 0x02){
+	} else if (PCA0CN && 0x02 == 0x02){
 		PCA0CN &= 0xFD;	//Clear le flag
 		Cde_Servo_V = 0; //Desactivation de la commande
 	}
-	else if (PCA0CN & 0x01 == 0x01){
+	else if (PCA0CN && 0x01 == 0x01){
 		PCA0CN &= 0xFE;
 	}
 }
