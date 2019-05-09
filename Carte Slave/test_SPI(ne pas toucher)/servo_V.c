@@ -5,6 +5,7 @@
 sbit Cde_Servo_V = P1^3;
 //long SYSCLK = 22118400;  // Fr?quence de l'horloge externe 
 /**/
+xdata int cpt_servo_V = 0;
 xdata float t_pulse_v; 
 xdata unsigned int timer_count_v; 
 xdata unsigned int timer_load_v;
@@ -25,7 +26,7 @@ void delay(int j){
 //Configuration initiale du PCA
 void config_PCA(){
 	//Configuration de la clock du PCA
-	PCA0MD = 0x01;
+	PCA0MD = 0x09;
 	//Configuration de la comparaison (+autorisation interruption quand comparaison ok
 	PCA0CPM1 = 0x49;
 	//Activation des interruptions
@@ -44,16 +45,22 @@ void cfg_clk_ext(void){
 }
 */
 void config_servo_v(){
+	xdata int temporaire= -90;
 	P1MDOUT |= 0x08;
 	alpha_v = (t_pos_max_v - t_pos_min_v) / 180;
-		
+	chg_servo_pos_v(temporaire);
+	PCA0CN |= 0x40;
 }
 
 //Interruption liée au PCA
 void interPCA() interrupt 9 {
 	if (PCA0CN >= 0x80){
 		PCA0CN &=0x7F; //Clear le flag 
- 		Cde_Servo_V = 1; // Activation de la commande
+		cpt_servo_V+=1;
+		if (cpt_servo_V == 12){
+			Cde_Servo_V = 1; // Activation de la commande
+			cpt_servo_V = 0;
+		}
 	} else if (PCA0CN && 0x02 == 0x02){
 		PCA0CN &= 0xFD;	//Clear le flag
 		Cde_Servo_V = 0; //Desactivation de la commande
@@ -66,10 +73,14 @@ void interPCA() interrupt 9 {
 
 
 unsigned int pos2timer_count_v(int pos){   // int pos
-	pos += 90;  // pos = [0?, 180?] 
+	if (pos >= 70){
+		pos = 180;  // pos = [0?, 180?] 
+	} else {
+		pos+=110;
+	}
 	
 // Dur?e de l'impulsion: 
-	 t_pulse_v = (t_pos_min_v + (pos * alpha_v)); 
+	 t_pulse_v = (t_pos_min_v + (pos * alpha_v))*12; 
 
 // Nombre de co?t d'horloge pour g?n?r? l'impulsion: 
 	timer_count_v = t_pulse_v* 0.001 * (SYSCLK/12); 

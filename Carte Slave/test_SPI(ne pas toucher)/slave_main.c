@@ -31,7 +31,8 @@ void reception_SPI() interrupt 6{
 		cpt_SPI++;
 	}
 	else{
-		stock[cpt_SPI] = '\0';
+		stock[cpt_SPI] = '\r';
+		stock[cpt_SPI+1] = '\0';
 		cpt_SPI = 0;
 		messageok = 1;	//message prêt pour l'analyse
 	}
@@ -44,10 +45,13 @@ int main() {
 	Oscillator_Init();
 	cfg_Clock_UART();
 	cfg_UART0_mode1();
-	config_servo_v();
 	config_PCA();
+	config_servo_v();
+
 	init_SPI0();
 	EA=1;
+	
+	
 	
 	while(1){
 		//Test si le message est prêt pour l'analyse

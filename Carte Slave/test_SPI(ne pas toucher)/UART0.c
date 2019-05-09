@@ -11,7 +11,7 @@ void Oscillator_Init(){
     OSCXCN    = 0x67;
     for (i = 0; i < 3000; i++);  // Wait 1ms for initialization
     while ((OSCXCN & 0x80) == 0);
-    OSCICN    = 0x0C;
+    OSCICN    = 0x08;
 }
 
 void cfg_Clock_UART(void){

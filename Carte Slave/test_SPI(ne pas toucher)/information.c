@@ -6,6 +6,7 @@
 #include "UART0.h"
 #include "pointeur.h"
 
+sbit Cde_Prise_vue = P1^4;
 
 char* clear(char* message){
 	xdata int cpt1 = 0;
@@ -54,5 +55,11 @@ void information(char* message){
 		//Fonction permettant de faire roter le servomoteur selon l'angle souhaite
 			chg_servo_pos_v(angle);
 		}
+		}
+		
+	else if(strcmp(prem,"PV") == 0){
+		Cde_Prise_vue = 1;
+		delay(10);
+		Cde_Prise_vue = 0;
 		}
 	}

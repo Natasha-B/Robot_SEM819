@@ -34,7 +34,7 @@ char UART_busy = 0;
 void delay(int j){
 	xdata unsigned int n, cp;
 	for(n=0;n<j;n++){
-		for(cp=0;cp<2500;cp++){
+		for(cp=0;cp<625;cp++){
 		};
 	}
 }
@@ -120,7 +120,7 @@ void cfg_interrupt (void) {
 
 void cfg_PWM(void){
 	PCA0CN = 0x00;
-	PCA0MD |= 0x01;
+	PCA0MD |= 0x09;
 	PCA0CPM0 |= 0xc3;
 	XBR0 |= 0x08;
 	P0MDOUT |= 0xff;
@@ -319,9 +319,10 @@ void start_blink_led(int t_up, int t_down, int n_period, int intensity) {
 		PCA0CPL0 = pca2;
 		PCA0CPH0 = pca1;
 		PCA0CN |= 0x40;
-		delay(t_up * 1000);
-		PCA0CN = 0x00;
-		delay (t_down * 1000);
+		delay(t_up * 100);
+		PCA0CPL0 = 0xFF;
+		PCA0CPH0 = 0xFF;
+		delay (t_down * 100);
 	}
 }
 
@@ -339,7 +340,7 @@ void led_on (void){
 void led_off() {
 	PCA0CPL0 = 0xFF;
 	PCA0CPH0 = 0xFF;
-	PCA0CN |= 0x40;
+	PCA0CN |= 0x40; 
 	
 }
 
