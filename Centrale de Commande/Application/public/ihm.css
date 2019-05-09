@@ -350,6 +350,13 @@ form {
 	margin: auto;
 }
 
+section{
+	background-color: #4FB0A3;
+	font-family : 'Didot' , sans-serif;
+	text-align: center;
+	border-color: black; 
+}
+
 /*style du pied de page*/
 
 footer {

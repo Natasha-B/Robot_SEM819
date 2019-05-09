@@ -31,8 +31,10 @@ var io = require('socket.io').listen(server);
 // Ports série 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-//const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 });
-const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 });
+const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 });
+//const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 });
+//const port = new SerialPort('/dev/bus/usb/001/001', { baudRate: 19200 });
+
 
 const parser = port.pipe(new Readline());
 
@@ -89,7 +91,7 @@ parserblue.on('data', function (data) {
 // GESTION FTP   https://www.npmjs.com/package/ftp-client
 //------------------------------------------------------------------------------------
 
-// récupérer les dossiers
+/*// récupérer les dossiers
   var c = new Client();
   c.on('ready', function() {
     c.list(function(err, list) {
@@ -122,7 +124,7 @@ parserblue.on('data', function (data) {
     });
   });
   // connect to localhost:21 as anonymous
-  c.connect();
+  c.connect();*/
 
 //------------------------------------------------------------------------------------
 // GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
@@ -141,10 +143,6 @@ io.sockets.on('connection', function (socket) {
             return console.log('Error on write: ', err.message);
 	  	    };
 	  	  console.log('message envoyé au robot : ', message);
-        // Ajoute un message dans la page
-        function insereMessage(message) {
-          $('#zone_chat').prepend('<p>'+ message + '</p>');
-        }
 	  	});
     });
 });
