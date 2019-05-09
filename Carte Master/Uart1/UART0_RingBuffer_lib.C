@@ -65,6 +65,7 @@
 #include <math.h>
 #include "servo_V.h"
 #include "SPI_master.h"
+#include "config.h"
 
 #ifndef CFG_Globale
    #define CFG_Globale
@@ -76,17 +77,27 @@
 // Paramètresd modifiables
 //*************************************************************************************************
 #define       MAX_BUFLEN 32 // Taille des buffers de données
-xdata char vitesse[3]="20";
-xdata int epreuve=0;
-xdata char angleMem[3]="000";
-xdata int signe=2;
-xdata int stop=0;
-xdata int courant_inst = 0;
-xdata float energie_tot = 0;
+xdata int stop=0;							// booleen pour l'arret d'urgence
+xdata int epreuve=0;					// booleen de début ou fin d'épreuve
+
+xdata char vitesse[3]="20";		// vitiesse initiale de notre robot
+
+xdata int FLAG2 = 0;					// booleen de timer2 pour 100ms
+xdata int FLAGTOURNE = 0;					// booleen de timer2 pour 100ms
+xdata int counter_T2 =0;			// compteur pour que notre timer2 atteigne 100ms
+
+xdata char angleMem[3]="000";	// angle du servomoteur mis en mémoire
+
+xdata int courant_inst = 0;		// courant/energie/tension relevees et calculees pour la mesure de courant
+xdata int energie_tot = 0;
 xdata int tension1 = 0;
-xdata int counter_T2 =0;
-xdata int distance2 = 1000;
-xdata int FLAG2 = 0;
+
+xdata int distance2 = 1000;		// distance associé à la detection d'obstacle
+xdata int TestX = 0;					// distances associees à l'avance en detection d'obstacle
+xdata int TestY = 0;
+xdata int signeX = 0;					// booleens pour le signe des distance à parcourir suivant les axes
+xdata int signeY = 0;
+xdata int signe=2;
 
 //*************************************************************************************************
 // DEFINITION DES MACROS DE GESTION DE BUFFER CIRCULAIRE
@@ -244,91 +255,18 @@ unsigned char len,code_err=0;
 #if Preload_Timer0 > 255 
 #error "Valeur Preload Timer0 HORS SPECIFICATIONS"
 #endif 
-//*****************************************************************************	 
-//cfg_Clock_UART
-//	Utilisation du Timer 1
-//*****************************************************************************	 
-void cfg_Clock_UART(void){
-  CKCON |= 0x10;      // T1M: Timer 1 use the system clock.
-  TMOD |= 0x20;       //  Timer1 CLK = system clock
-	TMOD &= 0x2f;			  // Timer1 configuré en timer 8 bit avec auto-reload	
-	TF1 = 0;				  // Flag Timer effacé
-	
-	TH1 = -(Preload_Timer0);
-	ET1 = 0;				   // Interruption Timer 1 dévalidée
-	TR1 = 1;				   // Timer1 démarré
 
-	T2CON |= 0x04;		// Timer 2 auto-reload, clock divisÃ© par 12(crossbar) avec comme valeur max 65536 donc 0.5425 us par coup
-	RCAP2L = 0x00;
-	RCAP2H = 0x00;
+//*****************************************************************************
 
-	
-}
-void time2(void) interrupt 0x5{
-	counter_T2++;
-	if (counter_T2==2){
-		RCAP2L = 0x00;					// pour obtenir 100 ms il faut 65536 + 65536 + 53248 (donc on change les valeurs de reload)
-		RCAP2H = 0x30;
-	}
-	if (counter_T2==3){
-		counter_T2 = 0;
-		FLAG2 = 1;
-		RCAP2L = 0x00;					// pour obtenir 100 ms il faut 65536 + 65536 + 53248 (donc on change les valeurs de reload)
-		RCAP2H = 0x00;
-		if (epreuve == 1){
-			tension1 = conversion_ADC0(); //mV
-			courant_inst = tension1*1000UL / (20UL*100UL);  //Rshunt = 50mohm et gain de 20; ET courant en mA
-			energie_tot = energie_tot + (0.1*courant_inst*(tension1/20UL)/1000UL/1000UL); //en J
-		}
-	}
-	TF2=0;
-}
+		//FONCTION LECTURE/ECRITURE DE NOTRE UART1 (MASTER-SERIALIZER)
 
-/*
-void time2 interrupt 5(void){
-	T2 &= 0x7F;
-}
-*/
- 
-
-//*****************************************************************************	 
-//CFG_uart0_mode1
-//
-//*****************************************************************************	 
-void cfg_UART0_mode1(void)
-{
-		RCLK0 = 0;     // Source clock Timer 1
-		TCLK0 = 0;
-		PCON  |= 0x80; //SMOD0: UART0 Baud Rate Doubler Disabled.
-		PCON &= 0xBF;  // SSTAT0=0
-		SCON0 = 0x70;   // Mode 1 - Check Stop bit - stock validée
-		TI0 = 1;        // Transmission: octet transmis (prêt à recevoir un char)
-					          // pour transmettre			
-    ES0 = 1;        // interruption UART0 autorisée	
-}
-
-void cfg_UART1_mode1(void)
-{
-		PCON  |= 0x10; //SMOD0: UART1 Baud Rate Doubler Disabled.
-		PCON &= 0xF7;  // SSTAT1=0
-		SCON1 = 0x70;   // Mode 1 - Check Stop bit - stock validée
-	
-    IE |= 0x20;        // interruption UART1 autorisée	ES1=1
-}
+//*****************************************************************************
 void putChar1(char carac){
 	SBUF1=carac;
 	while((SCON1|0xFD)==0xFD){
 		}
 	SCON1 &= 0xFD;
 	}
-	
-void putString1(char chaine[32]){
-		xdata int i;
-		for (i=0;i<strlen(chaine);i++){
-			putChar1(chaine[i]);
-		}
-	}
-	
 char getChar1(){
 	char reception=' ';
 	while((SCON1|0xFE)==0xFE){
@@ -337,11 +275,65 @@ char getChar1(){
 	SCON1 &= 0xFE;
 	return reception;
 	}
+void putString1(char chaine[32]){
+		xdata int i;
+		for (i=0;i<strlen(chaine);i++){
+			putChar1(chaine[i]);
+		}
+	}
+	
+void getString1(char* chaine){ 
+	xdata int i = 0;
+	for(i=0;i<5;i++){
+		chaine[i]=getChar1();
+	}
+}
+void getString2(char* chaine){ //fonction spéaciale pour la réception de la fonction : "getenc", car sa taille peut changer
+	xdata int i = 0;
+	for(i=0;i<7;i++){
+		chaine[i]=getChar1();
+	}
+}
+//*****************************************************************************
 
-	void UART0_ISR(void) interrupt 0x4 {
+//	INTERRUPTIONS 
+
+//*****************************************************************************
+
+
+/* TIMER 2
+		On veut plusieurs choses sur notre Timer 2:
+						- gerer le calcule de distance entre notre objet et le projet obstacle, donc la detection d'obstacle
+						- faire la mesure de courant
+*/
+void time2(void) interrupt 0x5{
+	counter_T2++;			// compteur pour atteindre les 100ms par interval de detection d'objet
+	if (counter_T2==2){
+		RCAP2L = 0x00;					// pour obtenir 100 ms il faut 65536 + 65536 + 53248 (donc on change les valeurs de reload)
+		RCAP2H = 0x30;
+	}
+	if (counter_T2==3){
+		counter_T2 = 0;
+		FLAG2 = 1;							/*On ne peut pas bloquer nos interruption, on se sert donc d'un flag pour faire
+																	des opérations à l'exterieurs de notre interrupt*/
+		RCAP2L = 0x00;					// pour obtenir 100 ms il faut 65536 + 65536 + 53248 (donc on change les valeurs de reload)
+		RCAP2H = 0x00;
+	}
+	
+	if (epreuve == 1){				// mesure de courant
+			tension1 = conversion_ADC0();
+			courant_inst = tension1*1000UL / (50UL*100UL);  //Rshunt = 50mohm et gain de 100;
+			energie_tot = energie_tot + (courant_inst*tension1*1);
+}
+TF2=0;
+}
+/* UART0
+		On veut plusieurs choses sur notre UART0:
+						- transmission des messages de notre signal de commande à la carte MASTER via module XBEE
+						- reception des message renvoyés par le robot via la carte MASTER et le module XBEE
+*/
+void UART0_ISR(void) interrupt 0x4 {
  
-//	static unsigned int cp_tx = 0;
-//  static unsigned int cp_rx = 0;
 	
   if (TI0==1) // On peut envoyer une nouvelle donnée sur la liaison série
   { 
@@ -351,7 +343,6 @@ char getChar1(){
 			}
        SBUF0 = *RB_POPSLOT(&out);      /* start transmission of next byte */
        RB_POPADVANCE(&out);            /* remove the sent byte from buffer */
-//			 cp_tx++;
   	}
   	else TXactive = 0;                 /* TX finished, interface inactive */
 	TI0 = 0;
@@ -359,28 +350,73 @@ char getChar1(){
   else // RI0 à 1 - Donc une donnée a été reçue
   {
 		if(!RB_FULL(&in)) {                   // si le buffer est plein, la donnée reçue est perdue
-     	*RB_PUSHSLOT(&in) = SBUF0;        /* store new data in the buffer */
-		  RB_PUSHADVANCE(&in);               /* next write location */
-//		  cp_rx++;
+     	*RB_PUSHSLOT(&in) = SBUF0;        	/* store new data in the buffer */
+		  RB_PUSHADVANCE(&in);               	/* next write location */
 	 }
    RI0 = 0;
   }
 }
-//void getString1(char* chaine){ 
-//	xdata int i = 0;
-//	do{
-//		chaine[i]=getchar1();
-//		i++;
-//	}
-//	while(chaine[i]!='>');
-//}
-	
-void getString1(char* chaine){ 
-	xdata int i = 0;
-	for(i=0;i<5;i++){
-		chaine[i]=getChar1();
+//*****************************************************************************
+
+//	FONCTION DE CONVERSION INT <=> ARRAY
+
+//*****************************************************************************
+void mon_itoa(int chiffre,char* distance_obs){ // basique
+	xdata int i;
+	xdata int a=100;
+	for (i=0;i<3;i++){
+		distance_obs[i]=0x30+floor(chiffre/a);
+		chiffre = chiffre - (distance_obs[i]-0x30)*a;
+		a = a/10;
 	}
 }
+void mon_itoaObs(int chiffre,char* distance_obs){ // pour detection d'obstacle, cas special car on doit redimensioner distance_obs
+		xdata int i;
+		xdata int j;
+		xdata int a=10;
+		xdata int cpt=1;
+			while(1){									// on vient mettre dans cpt la length de noptre chiffre (exp si 987 => cpt =3)
+				if (chiffre/a>1){
+					a=a*10;
+					cpt+=1;
+				}
+				else{
+					a=a/10;
+					break;
+				}
+			}
+		for(j=0;j<strlen(distance_obs)-cpt;j++){	// on met des 0 sur les premières cases mémoire
+			distance_obs[j]='0';
+		}
+		for(i=strlen(distance_obs)-cpt;i<strlen(distance_obs);i++){
+			distance_obs[i]=0x30+floor(chiffre/a);
+			chiffre = chiffre - (distance_obs[i]-0x30)*a;
+			a = a/10;
+		}
+	}
+void mon_itoaD(int chiffre,char* distance_obs){ //si on veut changer une distance, cas spécial suivant positif ou negatif
+		xdata int i=0;
+		xdata int n=0;
+		xdata int a=1000;
+		if (chiffre<0){					// si la distance est négative(on "recul")
+			chiffre=chiffre*(-1);	// on passe notre distance en positif 
+			distance_obs[0]='-';	// on marque dans distance_obs qu'on va vers les axes negatifs
+			i++;
+		}
+		n=i+3;
+		for (i;i<=n;i++){
+			distance_obs[i]=0x30+floor(chiffre/a);
+			chiffre = chiffre - (distance_obs[i]-0x30)*a;
+			a = a/10;
+		}
+	}
+//*****************************************************************************
+	
+//	FONCTION COMMANDE EFFECTUEE
+			// CETTE fonction permet que lorsque l'on veuille lancer une nouvelle commande aucune autre ne sois en cours.
+					//Elle sert également à code l'arret d'urgence, la detection d'obstacle tous les 100ms.	
+	
+//*****************************************************************************	
 void Commande_effectuee(){
 	xdata char chaine[32]="";
 	xdata int i = 0;
@@ -398,97 +434,61 @@ void Commande_effectuee(){
 				test = 1;
 			}
 		}
+		if ((FLAG2 == 1)&&(FLAGTOURNE==0)){
+			distance2 = (int)(calc_dist());
+			FLAG2 = 0;
+			if ((distance2<30)&&(distance2>0)){
+				putString1("stop\r");
+				break;
+			}
+		}
 	}
 	delay(10);
+}	
+
+//*****************************************************************************
+
+		// FONCTION AVANCE/TOURNE qui se sevent de la commande "mogo" ou "digo" 
+
+//*****************************************************************************
+void rotationG(int angle){
+	xdata char dist[4];
+	angle=angle*5.4;		// on à pris 5.4 de manière empirique, c'est le facteur de conversion entre notre angle en degrès et celui en increment qui lui équivaut
+	mon_itoaD(angle,dist);
+	putString1("digo 1:");
+	putString1(dist);
+	putString1(":10 2:-");
+	putString1(dist);
+	putString1(":10");
+	putChar1('\r');
 }
-	void mon_itoa(int chiffre,char* distance_obs){
-		xdata int i;
-		xdata int a=100;
-		for (i=0;i<3;i++){
-			distance_obs[i]=0x30+floor(chiffre/a);
-			chiffre = chiffre - (distance_obs[i]-0x30)*a;
-			a = a/10;
-		}
-	}
-		void mon_itoaD(int chiffre,char* distance_obs){
-		xdata int i=0;
-		xdata int n=0;
-		xdata int a=1000;
-		if (chiffre<0){
-			chiffre=chiffre*(-1);
-			distance_obs[0]='-';
-			i++;
-		}
-		n=i+3;
-		for (i;i<=n;i++){
-			distance_obs[i]=0x30+floor(chiffre/a);
-			chiffre = chiffre - (distance_obs[i]-0x30)*a;
-			a = a/10;
-		}
-	}
-	
-	
-	void avance(char* vitesse){
-		putString1("mogo 1:");
-		putString1(vitesse);
-		putString1(" 2:");
-		putString1(vitesse);
-		putChar1('\r');
-	}
-	
-	void calcDistanceX(char* distanceX){
-		xdata int dist1=0;
-		dist1=atoi(distanceX);
-		dist1=(1.67)*334*dist1/1.76;
-		mon_itoaD(dist1,distanceX);
-		
-	}
-	
-	void calcDistanceY(char* distanceY){
-		xdata int dist1=0;
-		dist1=atoi(distanceY);
-		dist1=(1.67)*334*dist1/1.76;
-		mon_itoaD(dist1,distanceY);
-	}
-	
-	void rotationG(int angle){
-		xdata char dist[4];
-		angle=angle*5.4;
-		mon_itoaD(angle,dist);
-		putString1("digo 1:");
-		putString1(dist);
-		putString1(":10 2:-");
-		putString1(dist);
-		putString1(":10");
-		putChar1('\r');
-	}
-		
-	void rotationD(int angle){
-		xdata char dist[4];
-		angle=angle*5.4;
-		mon_itoaD(angle,dist);
-		putString1("digo 1:-");
-		putString1(dist);
-		putString1(":10 2:");
-		putString1(dist);
-		putString1(":10");
-		putChar1('\r');
-	}
-	
-	void avanceX(char* distanceX){
-		if (distanceX[0]=='-'){
-			signe = 1;
+
+void rotationD(int angle){
+	xdata char dist[4];
+	angle=angle*5.4;		// on à pris 5.4 de manière empirique, c'est le facteur de conversion entre notre angle en degrès et celui en increment qui lui équivaut
+	mon_itoaD(angle,dist);
+	putString1("digo 1:-");
+	putString1(dist);
+	putString1(":10 2:");
+	putString1(dist);
+	putString1(":10");
+	putChar1('\r');
+}
+void avanceX(char* distanceX){
+		delay(20);
+		FLAGTOURNE = 1;
+		if (signeX==1){									// si on va vers les X négatifs
 			rotationG(90);
-			distanceX[0]='+';
 		}
-		else{
-			signe = 0;
-			rotationD(90);
+		else{														// si on va vers les X positifs
+			rotationD(90);	
 		}
-		Commande_effectuee();
-		if(stop==1){
+		Commande_effectuee();						// on attend que la rotation soit finie avant d'avancer
+		FLAGTOURNE = 0;
+		if(stop==1){										// si on demande un arrêt d'urgence, on n'avance pas et on arrête tout							
 		}
-		else{
+		else{							// pas d'arrêt d'urgence et rotation finie => on avance
+			delay(20);
 			putString1("digo 1:");
 			putString1(distanceX);
 			putString1(":20");
@@ -498,72 +498,131 @@ void Commande_effectuee(){
 			putChar1('\r');
 		}
 	}
-	void avanceY(char* distanceY){
-		if(stop==1){
+void avanceY(char* distanceY){
+	if(stop==1){											// si on demande un arrêt d'urgence, on n'avance pas et on arrête tout
+	}
+	else{
+		FLAGTOURNE = 1;		
+		delay(20);
+		if (signeX==1){			
+			if (signeY==1){								// si on va vers les X et Y négatifs
+				rotationG(90);
+			} 
+			else{													// si on va vers les X négatif et Y positif
+				rotationD(90);
+			}
 		}
 		else{
-			if (signe==1){
-				if (distanceY[0]=='-'){
-					rotationG(90);
-					distanceY[0]='+';
-				} 
-				else{
-					rotationD(90);
-				}
-			}
-			else{
-				if (distanceY[0]=='-'){
-					rotationD(90);
-				} 
-				else{
-					rotationG(90);
-				}
-			}
-			Commande_effectuee();
-			if(stop==1){
-			}
-			else{
-				putString1("digo 1:");
-				putString1(distanceY);
-				putString1(":20");
-				putString1(" 2:");
-				putString1(distanceY);
-				putString1(":20");
-				putChar1('\r');
+			if (signeY==1){								// si on va vers les X positif et Y négatif
+				rotationD(90);
+			} 
+			else{													// si on va vers les X positif et Y positif
+				rotationG(90);
 			}
 		}
+		Commande_effectuee();						// on attend que la rotation soit finie avant d'avancer		
+		FLAGTOURNE = 0;
+		if(stop==1){										// si on demande un arrêt d'urgence, on n'avance pas et on arrête tout
+		}
+		else{														// pas d'arrêt d'urgence et rotation finie => on avance
+			delay(20);
+			putString1("digo 1:");
+			putString1(distanceY);
+			putString1(":20");
+			putString1(" 2:");
+			putString1(distanceY);
+			putString1(":20");
+			putChar1('\r');
+		}
 	}
-		
-	
-	
-	void recule(char* vitesse){
-		putString1("mogo 1:-");
-		putString1(vitesse);
-		putString1(" 2:-");
-		putString1(vitesse);
-		putChar1('\r');
+}
+void avanceObstacle(char* distanceX){		// fonction d'avancé avec prise en compte des Obstacles
+				xdata int i=0;
+				xdata char chaine[15];
+				xdata char inc[15];
+				TestX=atoi(distanceX);						// TestX sert de variables qui prendra la valeurà parcourir
+				putString1("getenc 1\r");					// On demande à la carte SERIALIZER de nous donnée le nombre d'increments realises
+				getString2(chaine);
+				for(i=3;i<strlen(chaine);i++){
+					if (chaine[i]!='\r'){
+						inc[i-3]=chaine[i];
+					}
+					else{
+						break;
+					}
+						
+				}																	// on vient mettre dans "inc", le nombre d'increments réalises
+				if(atoi(inc)>=TestX){							/* si ce chiffre est superieur à la distance parcourue par le robot
+																									(3790 au lieu de 3789, car il n'est pas 100% précis)
+																						, on demande au robot de ne plus parcourir 1 seul cm, on met donc TestX à 0*/
+					TestX=0;
+				}
+				else{
+					TestX-=atoi(inc);								// si ce n'est pas le cas alors on soustrait à TestX la distance parcourue 								
+				}
+				mon_itoaObs(TestX,distanceX);			// On vient mettre à jour distanceX avec la nouvelle distance à parcourir
+				putString1("clearenc 1 2\r");			// on vient clear le nombre d'incréments enregistré dans le robot
 	}
 	
+void avance(char* vitesse){					// fonction avance banale avec les mogo
+	putString1("mogo 1:");
+	putString1(vitesse);
+	putString1(" 2:");
+	putString1(vitesse);
+	putChar1('\r');
+}
+
+void recule(char* vitesse){					// fonction recule banale avec les mogo
+	putString1("mogo 1:-");
+	putString1(vitesse);
+	putString1(" 2:-");
+	putString1(vitesse);
+	putChar1('\r');
+}
+//*****************************************************************************
+
+		// FONCTION CONVERSION DISTANCE EN dm/INCREMENTS
+
+//*****************************************************************************
+
+void calcDistanceX(char* distanceX){
+		xdata int dist1=0;
+		dist1=atoi(distanceX);
+		dist1=(1.67)*334*dist1/1.76;			/* les différents chiffres sont issue de la conversion donnée dans la datasheet
+																				après on à ajuster de manière empirique pour avoir une meilleur précision	*/
+		mon_itoaD(dist1,distanceX);	
+	}
 	
-	
-	
-	
-	
-	void transfert (char* stock) {
-	xdata char vitesse2[3]="";
-	xdata char angle[3]="";
-	xdata char angleRobot[3]="";
-	xdata int angleRob=0;
-	xdata char distanceX[6]="";
+void calcDistanceY(char* distanceY){
+		xdata int dist1=0;
+		dist1=atoi(distanceY);
+		dist1=(1.67)*334*dist1/1.76;			/* les différents chiffres sont issue de la conversion donnée dans la datasheet
+																				après on à ajuster de manière empirique pour avoir une meilleur précision	*/
+		mon_itoaD(dist1,distanceY);
+	}
+
+
+//*****************************************************************************
+
+		// FONCTION QUI PERMET DE DISTINGUER LES DIFFERENTES COMMANDES ENVOYEES PAR L'UTILISATEUR
+
+//*****************************************************************************
+
+void transfert (char* stock) {
+	xdata char vitesse2[3]="";				// si on précise une vitesse après la commande 'A' ou 'B'
+	xdata char angle[3]="";						// angle demandé pour le servomoteur (besoin de garder en mémoire)
+	xdata char angleRobot[3]="";			// angle demandé dans la commande 'G'
+	xdata int angleRob=0;							// int associé au array precedent
+	xdata char distanceX[6]="";				// array pour les distance à parcourir
 	xdata char distanceY[6]="";
-	xdata int i=0;
+	xdata int i=0;										// variables de boucles "for"
 	xdata int n=0;
 	xdata int j = 0;
-	xdata int machin = 0;
-	xdata int position_servo = 1;
-	xdata char distance_obs[3]="";
-	xdata int d=0;
-	xdata char courant[4]="";
+	xdata int machin = 0;							// int associé à l'array de l'angle servomoteur
+	xdata int position_servo = 1;			// int de position du servomoteur
+	xdata char distance_obs[3]="";		// array associé à l'entier du calcul de distance entre le robot et le prochain obstacle
+	xdata int d=0;										// valeur de distance entre le robot et le prochain l'obstacle
+	xdata char courant[4]="";					// array pour la mesure de courant
 	serOutstring("\n\r");
 	if(stock[0]=='D'){			// Début Epreuve
 		serOutstring("******Epreuve 1******");
@@ -613,7 +672,7 @@ void Commande_effectuee(){
 				
 				}
 			
-			else if(stock[0]=='B'){																	// Reculer
+			else if(stock[0]=='B'){							// Reculer										// Reculer
 				if (strlen(stock)==1){
 					recule(vitesse);
 					}
@@ -626,7 +685,7 @@ void Commande_effectuee(){
 				
 				}
 
-			else if(stock[0]=='S'){																	// STOP
+			else if(stock[0]=='S'){												// STOP					// STOP
 				putString1("stop\r");
 				serOutstring("stop");
 			}
@@ -657,10 +716,16 @@ void Commande_effectuee(){
 				}
 			
 				
+
 			// Avancer jusqu'a un point
-			else if(stock[0]=='G'){
+			else if(stock[0]=='G'){												// Commande G X: Y: A:
+				
+							/*
+								On commence par mettre nos paramètres dans des variables
+								*/
+				
 				j=0;
-				//distanceX
+				//DistanceX
 				while (stock[j]!=':'){
 					j++;
 				}
@@ -671,7 +736,7 @@ void Commande_effectuee(){
 					j++;
 					n++;
 				}
-				//distanceY
+				//DistanceY
 				while (stock[j]!=':'){
 					j++;
 				}
@@ -693,35 +758,56 @@ void Commande_effectuee(){
 					j++;
 					n++;
 				}
+				// On vient ensuite convertir nos distance en increment
 				calcDistanceX(distanceX);
-				calcDistanceY(distanceY);				
-				avanceX(distanceX);
-        Commande_effectuee();
-				
-				
-				avanceY(distanceY);
-				Commande_effectuee();
-
-				
+				calcDistanceY(distanceY);
+				if (distanceX[0]=='-'){
+					signeX = 1;
+					distanceX[0]='+';
+				}
 				if (distanceY[0]=='-'){
+					signeY = 1;
+					signe = 1;
+					distanceY[0]='+';
+				}
+				putString1("clearenc 1 2\r");
+				//on avance avec la detection d'obstacle
+				while((atoi(distanceX)>=10)||(atoi(distanceY)>=10)){
+					//AVANCE SELON X
+					avanceX(distanceX);
+					Commande_effectuee();								// on attend d'avoir finie l'avancee en X
+					avanceObstacle(distanceX);					// check si il y a un obstacle ou non
+					Commande_effectuee();								// on attend d'avoir finie l'avancee en X
+					//AVANCE SELON Y
+					avanceY(distanceY);
+					Commande_effectuee();								// on attend d'avoir finie l'avancee en Y
+					avanceObstacle(distanceY);					// check si il y a un obstacle ou non
+					Commande_effectuee();								// on attend d'avoir finie l'avancee en Y
+					if (signeY==1){											// on constate que à la rotation àprès obstacle, cette relation est toujours verifiée
+						signeX = 1-signeX;
+						signeY=0;
+					}
+					
+				}
+				if (signe==1){												// si on à tourné à 180° de notre position initiale dans les deplacements, on se remet à notre position initiale
 					rotationG(180);
 				}
-				angleRob=atoi(angleRobot);
+				angleRob=atoi(angleRobot);						
 			  Commande_effectuee();
-				if(stop==1){
+				if(stop==1){													// si arret d'urgence
 					stop=0;
 				}
 				else{
-				if (angleRob>0){
-					rotationG(angleRob);
-				}
-				else{
-					angleRob=abs(angleRob);
-					rotationD(angleRob);
-				}
-			serOutstring("\r\nB");
+					if (angleRob>0){										// on tourne de notre angle final
+						rotationG(angleRob);
+					}
+					else{
+						angleRob=abs(angleRob);
+						rotationD(angleRob);
+					}
+			serOutstring("\r\nB");									// on renvoit 'B' quand la commande est finie
 			}
-			}	
+}	
 			
 			
 			//servomoteur
@@ -791,19 +877,28 @@ void Commande_effectuee(){
 }
 	
 
+//*****************************************************************************
+
+		// FONCTION QUI PERMET AU CODE D'INSCRIRE CE QUE L'ON ECRIT SUR LE CLAVIER DANS
+			// LES BUFFERS CIRCULAIRE. ELLE PERMET EGALEMENT DE RELEVER TOUTES LES 100 MS
+			// LA DISTANCE ENTRE LE ROBOT ET LE PROCHAIN OBSTACLE
+
+//*****************************************************************************
+	
+
 void ecoute (void){
 	char c;
 	int compteur = 0;
 	char stock[32]="";	
-	while (((c=serInchar())!='\r')){
+	while (((c=serInchar())!='\r')){		// permet d'inscrire dans les buffer circulaire 
 		if (c!=0){
 			serOutchar(c);
-			stock[compteur]=c;
+			stock[compteur]=c;							// rempli la variable stock 
 			compteur ++;
 	  }
-	if (FLAG2 == 1){
+	if (FLAG2 == 1){										// FLAG2 = 1 donc on releve la distance entre le robot et le prochain obstacle
 		distance2 = (int)(calc_dist());
-		if ((distance2<20)&&(distance2>0)){
+		if ((distance2<30)&&(distance2>0)){
 			putString1("stop\r");
 		}
 		FLAG2 = 0;
