@@ -23,7 +23,6 @@ void init_SPI0(){
 	EIE1 |= 0x01;
 	EIP1 |= 0x01;
 }
-
 /*  PINS
 
 SCK -> P0.2

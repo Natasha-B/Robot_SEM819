@@ -119,7 +119,7 @@ void cfg_interrupt (void) {
  */
 
 void cfg_PWM(void){
-	PCA0CN |= 0x00;
+	PCA0CN = 0x00;
 	PCA0MD |= 0x01;
 	PCA0CPM0 |= 0xc3;
 	XBR0 |= 0x08;

@@ -35,7 +35,7 @@ void cfg_UART0_mode1(void){
 	
 	XBR0 |= 0x04;
 	XBR2 |= 0x40;
-	P0MDOUT |= 0x01;
+	P0MDOUT = 0x09;
 	
     ES0 = 1;        // interruption UART0 autorisée	
 

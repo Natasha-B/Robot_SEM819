@@ -19,12 +19,14 @@
 #include "servo_V.h"
 
 xdata char receive;
+xdata char test;
 xdata int cpt_SPI = 0;
 xdata char stock[32] = "";
 xdata char messageok = 0;	//Flag permettant d'avertir que le message est prêt à être analysé
 
 void reception_SPI() interrupt 6{
 	if(SPI0DAT != '\r'){
+		test = SPI0DAT;
 		stock[cpt_SPI] = SPI0DAT;
 		cpt_SPI++;
 	}
