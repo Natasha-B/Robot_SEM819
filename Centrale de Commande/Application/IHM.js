@@ -31,9 +31,9 @@ var io = require('socket.io').listen(server);
 // Ports série 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 });
-//const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 });
-//const port = new SerialPort('/dev/bus/usb/001/001', { baudRate: 19200 });
+const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
+//const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
+//const port = new SerialPort('/dev/bus/usb/001/001', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
 
 
 const parser = port.pipe(new Readline());
@@ -44,7 +44,7 @@ port.write('Robot Connecté\n', function(err) {
   if (err) {
     return console.log('Error on write: ', err.message);
   }
-  console.log('Robot OK');
+  console.log('Serial Robot OK');
 });
 
 // Gestion des erreurs
@@ -64,15 +64,15 @@ parser.on('data', function (data) {
 // GESTION DU PORT SERIE BLUETOOTH    https://stackoverflow.com/questions/8393636/node-log-in-a-file-instead-of-the-console
 //------------------------------------------------------------------------------------
 
-//const portblue = new SerialPort('/dev/tty.usbserial-A9054ZJ1', { baudRate: 19200 });
-/*const parserblue = portblue.pipe(new Readline());
+/*const portblue = new SerialPort('/dev/tty.usbserial-AK04P35A', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
+const parserblue = portblue.pipe(new Readline());
 
 // Envoi du message de début
 portblue.write('Cortex connecté\n', function(err) {
   if (err) {
     return console.log('Error on write: ', err.message);
   }
-  console.log('Cortex OK');
+  console.log('Serial Cortex OK');
 });
 
 // Gestion des erreurs
@@ -84,8 +84,8 @@ parserblue.on('error', function(err) {
 parserblue.on('data', function (data) {
   log_file.write(util.format(d) + '\n');
   log_stdout.write(util.format(d) + '\n');
-});*/
-
+});
+*/
 
 //------------------------------------------------------------------------------------
 // GESTION FTP   https://www.npmjs.com/package/ftp-client
