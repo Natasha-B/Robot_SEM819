@@ -18,6 +18,7 @@
 #include "information.h"
 #include "servo_V.h"
 
+sbit Cmd_PdV = P1^4;
 xdata char receive;
 xdata char test;
 xdata int cpt_SPI = 0;
@@ -41,13 +42,14 @@ void reception_SPI() interrupt 6{
 int main() {
 	WDTCN = 0xDE;
 	WDTCN = 0xAD;
+	Cmd_PdV = 0;
 	init();
 	Oscillator_Init();
 	cfg_Clock_UART();
 	cfg_UART0_mode1();
 	config_PCA();
 	config_servo_v();
-
+	
 	init_SPI0();
 	EA=1;
 	
