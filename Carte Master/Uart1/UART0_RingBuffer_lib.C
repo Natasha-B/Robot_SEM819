@@ -89,7 +89,7 @@ xdata int counter_T2 =0;			// compteur pour que notre timer2 atteigne 100ms
 xdata char angleMem[3]="000";	// angle du servomoteur mis en mémoire
 
 xdata int courant_inst = 0;		// courant/energie/tension relevees et calculees pour la mesure de courant
-xdata int energie_tot = 0;
+xdata float energie_tot = 0;
 xdata int tension1 = 0;
 
 xdata int distance2 = 1000;		// distance associé à la detection d'obstacle
@@ -321,9 +321,9 @@ void time2(void) interrupt 0x5{
 	}
 	
 	if (epreuve == 1){				// mesure de courant
-			tension1 = conversion_ADC0();
-			courant_inst = tension1*1000UL / (50UL*100UL);  //Rshunt = 50mohm et gain de 100;
-			energie_tot = energie_tot + (courant_inst*tension1*1);
+			tension1 = conversion_ADC0(); //mV
+			courant_inst = tension1*1000UL / (50UL*20UL);  //(Rshunt = 50mohm dou le facteur 1000) et gain de 20;
+			energie_tot = energie_tot + (((float)courant_inst/1000UL)*((float)tension1/(1000*20)*0.1); //0.1s = base de temps
 }
 TF2=0;
 }
@@ -860,7 +860,7 @@ void transfert (char* stock) {
 				serOutstring(courant);
 			}
 			else if ((stock[0] == 'M')&&(stock[1] == 'E')){
-				mon_itoa(energie_tot,courant);
+				mon_itoa((int)energie_tot,courant);
 				serOutstring(courant);
 			}
 			else{
