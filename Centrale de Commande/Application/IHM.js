@@ -16,7 +16,7 @@ var http = require('http');
 var util = require ('util');
 var fs = require('fs');
 var server = http.Server(app);
-var log_file = fs.createWriteStream('Desktop' + 'debug.log', {flags : 'w'});
+var cortex_file = fs.createWriteStream('Desktop' + 'cortex.txt', {flags : 'w'});
 var log_stdout = process.stdout;
 var Client = require('ftp');
 
@@ -33,7 +33,6 @@ const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
 //const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
-//const port = new SerialPort('/dev/bus/usb/001/001', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
 
 
 const parser = port.pipe(new Readline());
@@ -64,8 +63,9 @@ parser.on('data', function (data) {
 // GESTION DU PORT SERIE BLUETOOTH    https://stackoverflow.com/questions/8393636/node-log-in-a-file-instead-of-the-console
 //------------------------------------------------------------------------------------
 
-/*const portblue = new SerialPort('/dev/tty.usbserial-AK04P35A', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
-const parserblue = portblue.pipe(new Readline());
+const portblue = new SerialPort('/dev/tty.usbserial-AK04P30A', { baudRate: 115200, rtscts: true }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
+const parserb = new Readline();
+portblue.pipe(parserb);
 
 // Envoi du message de début
 portblue.write('Cortex connecté\n', function(err) {
@@ -76,55 +76,24 @@ portblue.write('Cortex connecté\n', function(err) {
 });
 
 // Gestion des erreurs
-parserblue.on('error', function(err) {
+parserb.on('error', function(err) {
   console.log('Error: ', err.message);
 });
 
-// Reception du message d'init
-parserblue.on('data', function (data) {
-  log_file.write(util.format(d) + '\n');
-  log_stdout.write(util.format(d) + '\n');
+
+var string = ''
+portblue.on('data',function(data){
+  var part = data.toString();
+  string += part;
+  //console.log('Message du cortex:  ' + part);
+  //io.to('all').emit('message', part);
+  fs.appendFile('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/cortex.txt', part, (err) => {
+  if (err) throw err;
+  console.log('Appended to file!');
 });
-*/
 
-//------------------------------------------------------------------------------------
-// GESTION FTP   https://www.npmjs.com/package/ftp-client
-//------------------------------------------------------------------------------------
+});
 
-/*// récupérer les dossiers
-  var c = new Client();
-  c.on('ready', function() {
-    c.list(function(err, list) {
-      if (err) throw err;
-      console.dir(list);
-      c.end();
-    });
-  });
-  // connect to localhost:21 as anonymous
-  c.connect();
-
-// download
-  var c = new Client();
-  c.on('ready', function() {
-    c.get('foo.txt', function(err, stream) {
-      if (err) throw err;
-      stream.once('close', function() { c.end(); });
-      stream.pipe(fs.createWriteStream('foo.local-copy.txt'));
-    });
-  });
-  // connect to localhost:21 as anonymous
-  c.connect();
-
-// upload
-  var c = new Client();
-  c.on('ready', function() {
-    c.put('foo.txt', 'foo.remote-copy.txt', function(err) {
-      if (err) throw err;
-      c.end();
-    });
-  });
-  // connect to localhost:21 as anonymous
-  c.connect();*/
 
 //------------------------------------------------------------------------------------
 // GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
@@ -147,6 +116,39 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
+
+
+//------------------------------------------------------------------------------------
+// Lecture des fichiers traités https://nodejs.org/api/fs.html
+// https://www.ipgirl.com/949/verifiez-si-le-fichier-repertoire-existe-dans-node-js.html
+//
+//------------------------------------------------------------------------------------
+
+const readline = require('readline');
+
+if (fs.existsSync('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt')){
+      const rl = readline.createInterface({
+          input: fs.createReadStream('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt')
+      });
+
+      // Each new line emits an event - every time the stream receives \r, \n, or \r\n
+      rl.on('line', (line) => {
+          port.write( line, function(err) {
+            if (err) {
+              return console.log('Error on write: ', err.message);
+            };
+            });
+          console.log(line);
+      });
+
+      rl.on('close', () => {
+          console.log('Done reading file');
+          fs.unlink('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt', (err) => {
+              if (err) throw err;
+          console.log('file successfully deleted');
+      });
+      });
+};
 
 //------------------------------------------------------------------------------------
 // GESTION DE LA PAGE IHM
