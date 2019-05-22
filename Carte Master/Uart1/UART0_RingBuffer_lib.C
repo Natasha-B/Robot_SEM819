@@ -636,7 +636,7 @@ void transfert (char* stock) {
 	else{
 		
 		if (epreuve==1){
-			if((stock[1]=='V')&&(stock[0]='T')){								// TV vitesse
+			if((stock[1]=='V')&&(stock[0]=='T')){								// TV vitesse
 				vitesse[2]='\0';
 				for (i=3;i<=strlen(stock);i++){
 					vitesse[i-3]=stock[i];
@@ -653,7 +653,7 @@ void transfert (char* stock) {
 			}
 		}
 			
-		else if(((stock[0] == 'A')&&(stock[1] == 'S')&&(stock[2]== 'S'))||((stock[0] == 'S')&&(stock[1] == 'D'))||(stock[0] == 'L')){
+		else if(((stock[0] == 'A')&&(stock[1] == 'S')&&(stock[2]== 'S'))||((stock[0] == 'S')&&(stock[1] == 'D'))||(stock[0] == 'L')||((stock[0] == 'P')&&(stock[1] == 'V'))){
 				xdata char testSPI[32];
 				sprintf(testSPI,"%s\r",stock);
 				envoi_SPI(testSPI);
