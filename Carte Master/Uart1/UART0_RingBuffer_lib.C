@@ -323,7 +323,7 @@ void time2(void) interrupt 0x5{
 	if (epreuve == 1){				// mesure de courant
 			tension1 = conversion_ADC0(); //mV
 			courant_inst = tension1*1000UL / (50UL*20UL);  //(Rshunt = 50mohm dou le facteur 1000) et gain de 20;
-			energie_tot = energie_tot + (((float)courant_inst/1000UL)*((float)tension1/(1000*20)*0.1); //0.1s = base de temps
+			energie_tot = energie_tot + (((float)courant_inst/1000UL)*((float)tension1/(1000*20)*0.1)); //0.1s = base de temps
 }
 TF2=0;
 }
