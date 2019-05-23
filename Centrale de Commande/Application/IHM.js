@@ -63,7 +63,7 @@ parser.on('data', function (data) {
 // GESTION DU PORT SERIE BLUETOOTH    https://stackoverflow.com/questions/8393636/node-log-in-a-file-instead-of-the-console
 //------------------------------------------------------------------------------------
 
-const portblue = new SerialPort('/dev/tty.usbserial-AK04P30A', { baudRate: 115200, rtscts: true }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
+const portblue = new SerialPort('/dev/tty.usbserial-A9054ZJ1', { baudRate: 115200, rtscts: true }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
 const parserb = new Readline();
 portblue.pipe(parserb);
 
@@ -85,11 +85,11 @@ var string = ''
 portblue.on('data',function(data){
   var part = data.toString();
   string += part;
-  //console.log('Message du cortex:  ' + part);
+  console.log('Message du cortex:  ' + part);
   //io.to('all').emit('message', part);
   fs.appendFile('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/cortex.txt', part, (err) => {
   if (err) throw err;
-  console.log('Appended to file!');
+  console.log('Message Cortex saved!');
 });
 
 });
@@ -160,12 +160,9 @@ app.get('/', function(req,res){
 	res.render('couverture.ejs', {});
 });
 
-app.get('/assistance', function(req,res){
-	res.render('assistance.ejs', {"nom": "en pyjama"});
-});
 
-app.get('/assistance/:nom', function(req,res){
-	res.render('assistance.ejs', {"nom": req.params.nom});
+app.get('/assistance', function(req,res){
+	res.render('assistance.ejs');
 });
 
 //------------------------------------------------------------------------------------

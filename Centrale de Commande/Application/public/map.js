@@ -14,4 +14,4 @@ var map = L.map('mapid', {
 });
 
 var sol = L.latLng([ 110, 170 ]);
-L.marker(     sol).addTo(map).bindPopup(      'Sol');
+L.marker(sol).addTo(map).bindPopup('Sol');
