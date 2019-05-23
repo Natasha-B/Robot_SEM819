@@ -50,13 +50,17 @@ cible_z = data_dict_envir.get("cible").get("hauteur")
 #coordonnées de la position de tir
 pos_tir_x = data_dict_base_roul.get("position-tir_cible").get("coordonnees").get("x")
 pos_tir_y = data_dict_base_roul.get("position-tir_cible").get("coordonnees").get("y")
-pos_tir_z = conversion_unite(unite_base_roul,13)   #hauteur du pointeur lumineux = 13 cm quand angle = 90°
+pos_tir_z = conversion_unite(unite_base_roul,31)   #hauteur du pointeur lumineux = 31 cm quand angle = 90°
 
 
 if unite_envir == unite_base_roul:
     distance_x = cible_x - pos_tir_x
     distance_y = cible_y - pos_tir_y
     distance_z = cible_z - pos_tir_z
+#if unite_envir == unite_base_roul:
+#    distance_x = 0
+#    distance_y = 75
+#    distance_z = 57
 else:
     #calcul des distances entre position tir et cible selon les différentes unité
     if unite_base_roul == "cm":
@@ -86,11 +90,17 @@ angle_plan_vertical = np.arccos(distance_z/(distance_plan_vertical)) #angle en r
 angle_plan_vertical  = conversion_angle(unite_ang,angle_plan_vertical )
 
 commande_h = "CS H A:"+str(angle_plan_horizontal)
-commande_v = "CS V A:"+str(angle_plan_vertical)
+commande_v = "CS V A:"+str(- angle_plan_vertical)
+commande_tir = "L 100 10 0 1"  # tir avec intensité lumineuse = 100% et durée d'allumage 1s 1 fois
+commande_fin_tir = "LS"
+
 
 #    Creation du fichier texte avec les commandes
-f = open("calcul_pilotage_pointeur_lumineux.txt","w+")
+f = open("parcours_optimal.txt","a")
 f.write("%s\r\n" %(commande_h))
 f.write("%s\r\n" %(commande_v))
+f.write("%s\r\n" %(commande_tir))
+f.write("%s\r\n" %(commande_fin_tir))
+
     
 f.close()
