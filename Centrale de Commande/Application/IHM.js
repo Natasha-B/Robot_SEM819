@@ -16,9 +16,6 @@ var http = require('http');
 var util = require ('util');
 var fs = require('fs');
 var server = http.Server(app);
-var cortex_file = fs.createWriteStream('Desktop' + 'cortex.txt', {flags : 'w'});
-var log_stdout = process.stdout;
-var Client = require('ftp');
 
 // Chargement de socket.io
 var io = require('socket.io').listen(server);
@@ -31,10 +28,8 @@ var io = require('socket.io').listen(server);
 // Ports série 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
-//const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
-
-
+//const port = new SerialPort('/dev/tty.usbserial', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
+const port = new SerialPort('/dev/tty.Bluetooth-Incoming-Port', { baudRate: 19200 }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
 const parser = port.pipe(new Readline());
 
 
@@ -60,9 +55,10 @@ parser.on('data', function (data) {
 
 
 //------------------------------------------------------------------------------------
-// GESTION DU PORT SERIE BLUETOOTH    https://stackoverflow.com/questions/8393636/node-log-in-a-file-instead-of-the-console
+// GESTION DU PORT SERIE BLUETOOTH    
+//https://stackoverflow.com/questions/8393636/node-log-in-a-file-instead-of-the-console
 //------------------------------------------------------------------------------------
-
+/*
 const portblue = new SerialPort('/dev/tty.usbserial-A9054ZJ1', { baudRate: 115200, rtscts: true }, function(err) {if (err) {return console.log('Error on write: ', err.message);}});
 const parserb = new Readline();
 portblue.pipe(parserb);
@@ -93,10 +89,11 @@ portblue.on('data',function(data){
 });
 
 });
-
+*/
 
 //------------------------------------------------------------------------------------
-// GESTION SOCKET.IO   https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
+// GESTION SOCKET.IO   
+//https://openclassrooms.com/fr/courses/1056721-des-applications-ultra-rapides-avec-node-js/1057825-socket-io-passez-au-temps-reel
 //------------------------------------------------------------------------------------
 
 
@@ -112,43 +109,42 @@ io.sockets.on('connection', function (socket) {
             return console.log('Error on write: ', err.message);
 	  	    };
 	  	  console.log('message envoyé au robot : ', message);
+
+        //------------------------------------------------------------------------------------
+        // Lecture du fichier d'épreuve lors de l'envoi de la première commande : début d'épreuve
+        //https://nodejs.org/api/fs.html
+        // https://www.ipgirl.com/949/verifiez-si-le-fichier-repertoire-existe-dans-node-js.html
+        //------------------------------------------------------------------------------------
+
+        const readline = require('readline');
+
+        if (fs.existsSync('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt')){
+              const rl = readline.createInterface({
+                  input: fs.createReadStream('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt')
+              });
+
+              // Each new line emits an event - every time the stream receives \r, \n, or \r\n
+              rl.on('line', (line) => {
+                  port.write( line, function(err) {
+                    if (err) {
+                      return console.log('Error on write: ', err.message);
+                    };
+                    });
+                  console.log(line);
+              });
+
+              rl.on('close', () => {
+                  console.log('Done reading file');
+                  fs.unlink('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt', (err) => {
+                      if (err) throw err;
+                  console.log('file successfully deleted');
+              });
+              });
+        };
 	  	});
     });
 });
 
-
-
-//------------------------------------------------------------------------------------
-// Lecture des fichiers traités https://nodejs.org/api/fs.html
-// https://www.ipgirl.com/949/verifiez-si-le-fichier-repertoire-existe-dans-node-js.html
-//
-//------------------------------------------------------------------------------------
-
-const readline = require('readline');
-
-if (fs.existsSync('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt')){
-      const rl = readline.createInterface({
-          input: fs.createReadStream('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt')
-      });
-
-      // Each new line emits an event - every time the stream receives \r, \n, or \r\n
-      rl.on('line', (line) => {
-          port.write( line, function(err) {
-            if (err) {
-              return console.log('Error on write: ', err.message);
-            };
-            });
-          console.log(line);
-      });
-
-      rl.on('close', () => {
-          console.log('Done reading file');
-          fs.unlink('../../../../../Dropbox/Projet\ Transversal/FichiersPCcalcul/test.txt', (err) => {
-              if (err) throw err;
-          console.log('file successfully deleted');
-      });
-      });
-};
 
 //------------------------------------------------------------------------------------
 // GESTION DE LA PAGE IHM
