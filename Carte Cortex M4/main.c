@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -49,13 +48,12 @@ DAC_HandleTypeDef hdac;
 
 I2C_HandleTypeDef hi2c1;
 
-SPI_HandleTypeDef hspi2;
-
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart5;
 
 PCD_HandleTypeDef hpcd_USB_FS;
 
@@ -69,16 +67,19 @@ int i = 0;
 int seuil = 0x8000;
 //Le 1,5 envoyer par le conditionnement
 int centre = 0x7FF;
-int tps_acqu;
+int tps_acqu = 100;
 int cpt_temps;
+int test;
 
 // UART4
 uint8_t h4RX;
+uint8_t h5TX;
 __IO uint16_t size=1;
 int cpt_uart =0;
 char stock[32] = "";
 char stock2[32] = "";
 char prem;
+int start = 1;
 
 
 // Génération de signal
@@ -94,17 +95,10 @@ int sinus[10] = {2078,3251,3995,3995,3251,2048,844,100,100,844};
 int cpt_t4 = 0;
 int allume = 1;
 int flag_startgene = 0;
-int flag_startacqu =0;
+int flag_startacqu = 0;
+int cpt_acqu = 0;
 
-//carte SD
-FATFS fs;
-FATFS *pfs;
-FIL fil;
-FRESULT fres;
-DWORD fre_clust;
-uint32_t total, free;
-char buffer[100];
-
+	
 
 /* USER CODE END PV */
 
@@ -119,7 +113,7 @@ static void MX_TIM3_Init(void);
 static void MX_UART4_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
-static void MX_SPI2_Init(void);
+static void MX_UART5_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -165,41 +159,22 @@ int main(void)
   MX_UART4_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
-  MX_SPI2_Init();
-  MX_FATFS_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-	
 	HAL_UART_Receive_IT(&huart4,&h4RX,size);
 	
-	 /* Mount SD Card */
-  f_mount(&fs, "", 0);
-  
-  /* Open file to write */
-  f_open(&fil, "first.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
-  
-  /* Check free space */
-  f_getfree("", &fre_clust, &pfs);
-  
-  total = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
-  free = (uint32_t)(fre_clust * pfs->csize * 0.5);   
-    
-  /* Free space is less than 1kb */
-  if(free < 1)
-    _Error_Handler(__FILE__, __LINE__);  
-  
-  /* Writing text */
-  f_puts("STM32 SD Card I/O Example via SPI\n", &fil);  
-  f_puts("Save the world!!!", &fil);
-  
-  /* Close file */
-  if(f_close(&fil) != FR_OK)
-    _Error_Handler(__FILE__, __LINE__);  
-  
-  /* Unmount SDCARD */
-  if(f_mount(NULL, "", 1) != FR_OK)
-    _Error_Handler(__FILE__, __LINE__);  
-  
-  
+	
+	
+//	h5TX = '1';
+//	HAL_UART_Transmit(&huart5,&h5TX,size,100);
+//  h5TX = '2';
+//  HAL_UART_Transmit(&huart5,&h5TX,size,100);
+//	h5TX = '3';
+//  HAL_UART_Transmit(&huart5,&h5TX,size,100);
+//	h5TX = '4';
+//	HAL_UART_Transmit(&huart5,&h5TX,size,100);
+		
+		
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -210,11 +185,10 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		if(flag_startgene ==1){
-
-      
 			sscanf( stock, "%d %d %d %d",&id_freq,&tps_son,&tps_silence,&nb_bips );
 			
 			freq = tabfreq[id_freq-1];
+			
 			
 			MX_TIM2_Init();
 			MX_TIM4_Init();
@@ -225,13 +199,34 @@ int main(void)
 			
 			flag_startgene = 0; 
 			}
+
 		if(flag_startacqu ==1){
 			sscanf(stock,"%d",&tps_acqu);
-			cpt_temps = 0;
-			HAL_TIM_Base_Start_IT(&htim3);
+			cpt_acqu = 1;
 			
 			flag_startacqu = 0;
 			}
+      
+    if(cpt_acqu != 0){
+      HAL_ADC_Start(&hadc2);
+      HAL_ADC_PollForConversion(&hadc2,timeout);
+      sig = HAL_ADC_GetValue(&hadc2);
+      
+      h5TX = sig/64 + 48;
+      HAL_UART_Transmit(&huart5,&h5TX,size,100);
+      h5TX = sig%64 + 48;
+      HAL_UART_Transmit(&huart5,&h5TX,size,100);
+      
+      //écriture sur l'ADC1
+      HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_12B_R,sig);
+      HAL_DAC_Start (&hdac, DAC_CHANNEL_2);
+      cpt_acqu++;
+      if(cpt_acqu == tps_acqu*52){
+        HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_12B_R,0);
+        HAL_DAC_Start (&hdac, DAC_CHANNEL_2);
+        cpt_acqu =0;
+      }
+    }
   }
   /* USER CODE END 3 */
 }
@@ -274,8 +269,10 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_UART4
-                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_ADC12;
+                              |RCC_PERIPHCLK_UART5|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Uart4ClockSelection = RCC_UART4CLKSOURCE_PCLK1;
+  PeriphClkInit.Uart5ClockSelection = RCC_UART5CLKSOURCE_PCLK1;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL;
@@ -427,46 +424,6 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
-
-}
-
-/**
-  * @brief SPI2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI2_Init(void)
-{
-
-  /* USER CODE BEGIN SPI2_Init 0 */
-
-  /* USER CODE END SPI2_Init 0 */
-
-  /* USER CODE BEGIN SPI2_Init 1 */
-
-  /* USER CODE END SPI2_Init 1 */
-  /* SPI2 parameter configuration*/
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_MASTER;
-  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 7;
-  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI2_Init 2 */
-
-  /* USER CODE END SPI2_Init 2 */
 
 }
 
@@ -641,6 +598,41 @@ static void MX_UART4_Init(void)
 }
 
 /**
+  * @brief UART5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART5_Init(void)
+{
+
+  /* USER CODE BEGIN UART5_Init 0 */
+
+  /* USER CODE END UART5_Init 0 */
+
+  /* USER CODE BEGIN UART5_Init 1 */
+
+  /* USER CODE END UART5_Init 1 */
+  huart5.Instance = UART5;
+  huart5.Init.BaudRate = 115200;
+  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+  huart5.Init.StopBits = UART_STOPBITS_1;
+  huart5.Init.Parity = UART_PARITY_NONE;
+  huart5.Init.Mode = UART_MODE_TX_RX;
+  huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart5.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart5.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart5.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART5_Init 2 */
+
+  /* USER CODE END UART5_Init 2 */
+
+}
+
+/**
   * @brief USB Initialization Function
   * @param None
   * @retval None
@@ -685,6 +677,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
@@ -741,13 +734,26 @@ static void MX_GPIO_Init(void)
 //Interuption du timer 3 toute les 10ms
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	
+  /*
 	if(htim == &htim3){
 		//Lecture de l'ADC 
 		HAL_ADC_Start(&hadc2);
 		HAL_ADC_PollForConversion(&hadc2,timeout);
 		sig = HAL_ADC_GetValue(&hadc2);
 		
-		/*
+		h5TX = sig/1000 + 48;
+		HAL_UART_Transmit(&huart5,&h5TX,size,100);
+		h5TX = (sig % 1000)/100 + 48;
+		HAL_UART_Transmit(&huart5,&h5TX,size,100);
+		h5TX = (sig % 100)/10 + 48;
+		HAL_UART_Transmit(&huart5,&h5TX,size,100);
+		h5TX = (sig % 10) + 48 ;
+		HAL_UART_Transmit(&huart5,&h5TX,size,100);
+		h5TX = ' ';
+		HAL_UART_Transmit(&huart5,&h5TX,size,100);
+		
+		
+		
 		if(i<100){
 			if(sig<centre){
 				somme100 += centre-sig;
@@ -769,16 +775,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			i=0;
 			somme100=0;
 		}
-		*/
+		
 		//�criture sur l'ADC1
 		HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_12B_R,sig);
 		HAL_DAC_Start (&hdac, DAC_CHANNEL_2);
 		cpt_temps++;
-		if(cpt_temps == tps_acqu*1000){
-			HAL_TIM_Base_Start_IT(&htim3);
+		if(cpt_temps == tps_acqu*100){
+			HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_12B_R,0);
+		  HAL_DAC_Start (&hdac, DAC_CHANNEL_2);
+			HAL_TIM_Base_Stop_IT(&htim3);
 		}
 	}
-	else if(htim == &htim2){
+  */
+	/*else*/ if(htim == &htim2){
 		if(allume == 1){
 			HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,sinus[cpt_sin]);
 			HAL_DAC_Start (&hdac, DAC_CHANNEL_1);
@@ -826,8 +835,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if(h4RX != '\r'){
-		if(cpt_uart==0){
+		if(start==1){
 			prem = h4RX;
+			start = 0;
 		}
 		if((h4RX == ' ' || h4RX == '0' || h4RX == '1' || h4RX == '2' || h4RX == '3' || h4RX == '4' || h4RX == '5' || h4RX == '6' || h4RX == '7' || h4RX == '8' || h4RX == '9')){
 		stock[cpt_uart] = h4RX;
@@ -837,12 +847,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	else{
 		stock[cpt_uart] = '\0';
 		cpt_uart = 0;
-		if(prem == 'A'){
+		if(prem == 'S'){
 				flag_startgene = 1;
 		}
-		if(prem == 'S'){
+		if(prem == 'A'){
 				flag_startacqu = 1;
 		}
+		start = 1;
 	}
 	HAL_UART_Receive_IT(&huart4,&h4RX,size);
 }
