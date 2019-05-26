@@ -51,6 +51,7 @@ int main() {
 	config_servo_v();
 	
 	init_SPI0();
+	led_off();
 	EA=1;
 	
 	
