@@ -33,4 +33,3 @@ Exemples de commande:
      TV 20 B 10     # Recule à la vitesse 10
      TV 20 RD       # Tourne à droite 
      
-## Liste des commandes envoyées par la carte master à la serializer:
