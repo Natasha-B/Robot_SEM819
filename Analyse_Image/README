@@ -1,4 +1,6 @@
-Le programme s'organise en différentes sous fonctions : 
+# Système d'annalyse d'images 
+
+## Le programme s'organise en différentes sous fonctions : 
 
 - Le programme Analyse_image.m  : Il s'agit ici du programme principal qui va permettre à l'ensemble des fonctions suivantes de s'organiser correctement. 
                                 L'utilisateur ne devrait aveoir qu'à manipuler celui ci afin de changer le chemin d'accès, changer le chemin de sortie, rien de plus.
