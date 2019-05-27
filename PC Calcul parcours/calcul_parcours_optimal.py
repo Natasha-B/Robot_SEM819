@@ -875,5 +875,5 @@ dbx = dropbox.Dropbox('GA2yOgwmKSAAAAAAAAABL4BMab5h5PGP96vRhWCyO2hXKYBa7G1yEOFLz
 print("Initializing Dropbox API...")
 filename = 'parcours_optimal.txt'
 
-with open(filename, "rb") as f:
+with open(filename, "/Projet Transversal/FichiersPCcalcul/") as f:
     dbx.files_upload(f.read(),'/'+filename)
